@@ -1,0 +1,20 @@
+# Secrets — NEVER commit these
+.env
+.env.*
+*.key
+*.pem
+secrets/
+service-account*.json
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Dependencies / build output
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+.venv/
+venv/
