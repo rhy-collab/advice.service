@@ -106,3 +106,22 @@
 
 **Remaining work**
 - Real Anthropic document ingestion needs live document retrieval from GCS plus a reviewed Anthropic prompt/client path. The current interface isolates that future integration behind `AIPrepService`.
+
+## Issue 6 — Playbook data model v1
+
+**Status:** Completed
+
+**What changed**
+- Added `playbooks` and `playbook_checks` models and Alembic migration.
+- Added structured playbook schemas for detection, severity, remediation intent, preferred language, acceptable fallback, unacceptable fallback, and accuracy counters.
+- Added `PlaybookService` with create, list/filter, get, add-check, and idempotent NDA seed.
+- Added tests for CRUD, filtering, missing rows, and the seed.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+
+**Result**
+- Backend tests pass.
+
+**Remaining work**
+- Wire the AI prep engine to consume these checks in a later issue.

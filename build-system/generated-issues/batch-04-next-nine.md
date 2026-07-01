@@ -50,11 +50,12 @@
 **Verification:** `pytest -q` (with the stub).
 **Security/compliance:** Internal-only enforced server-side; no legal advice to customers. **Files:** `app/services/ai_engine.py`, `app/routers/matters.py`, migration, tests. **Depends on:** 3. **Done means:** AI prep runs and stays internal until approval.
 
-## Issue 6 — Playbook data model v1 ⬜
+## Issue 6 — Playbook data model v1 ✅
 **Objective:** A structured risk/clause library in Postgres (not free-text prompts).
 **Why:** The moat; drives accuracy and routing later.
 **Scope:** Tables for playbooks + checks (detection, severity tier, remediation intent, preferred/acceptable/unacceptable fallback language, per-check accuracy); Alembic migration; basic CRUD service + tests. Seed a small NDA playbook.
 **Acceptance:** Playbook + checks persist; CRUD works; migration up/down clean.
+**Current status:** Playbook/check tables, schemas, CRUD service, and idempotent NDA seed are implemented with tests.
 **Verification:** `pytest -q`.
 **Security/compliance:** none. **Files:** `app/models/playbook.py`, `app/services/playbook_service.py`, migration, tests. **Depends on:** —. **Done means:** the playbook is a first-class, structured system.
 
