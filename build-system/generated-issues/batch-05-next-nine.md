@@ -6,11 +6,12 @@
 
 ---
 
-## Issue 1 — Retention: delete the actual storage objects ⬜
+## Issue 1 — Retention: delete the actual storage objects ✅
 **Objective:** Make retention/deletion remove the real GCS objects, not just DB file references.
 **Why:** Today retention deletes `matter_files` rows but leaves confidential documents in the bucket — orphaned confidential material. (From the Batch 04 review.)
 **Scope:** Add `StorageService.delete_object(bucket, object)` (real delete when creds present, no-op stub otherwise); have `RetentionService.purge_expired` delete each object before removing its row; add an admin/scheduled trigger to run the purge.
 **Acceptance:** Purge removes storage objects then rows; free checker still stores nothing; tests cover the delete path via a fake storage.
+**Current status:** Retention calls `StorageService.delete_object` before deleting expired matter-file rows, reports object deletions, and exposes an attorney/admin purge endpoint at `/v1/attorney/retention/purge`.
 **Verification:** `pytest -q`.
 **Security/compliance:** True deletion of confidential material. **Files:** `app/services/storage_service.py`, `app/services/retention.py`, trigger, tests. **Depends on:** —. **Done means:** deletion is real end-to-end.
 

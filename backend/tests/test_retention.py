@@ -2,14 +2,27 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
+from fastapi.testclient import TestClient
 
+from app.main import app
 from app.models.intake import PublicIntakeModel
 from app.models.matter import MatterFileModel, MatterModel
 from app.schemas.matters import AttorneyApprovalRequest, CreateMatterRequest
 from app.schemas.public import PublicIntakeRequest
+from app.services.auth import AuthContext, require_auth_context
 from app.services.intake_service import IntakeService
 from app.services.matter_service import MatterService
 from app.services.retention import RetentionService
+import app.routers.attorney as attorney_router
+
+
+class DeletingStorage:
+    def __init__(self) -> None:
+        self.deleted: list[tuple[str, str]] = []
+
+    def delete_object(self, bucket: str, object_name: str) -> bool:
+        self.deleted.append((bucket, object_name))
+        return True
 
 
 def test_retention_purges_old_public_intakes(
@@ -60,7 +73,8 @@ def test_retention_purges_only_old_delivered_matter_file_refs(
     monkeypatch,
 ) -> None:
     monkeypatch.setenv("MATTER_FILE_RETENTION_DAYS", "30")
-    retention = RetentionService(session_factory)
+    storage = DeletingStorage()
+    retention = RetentionService(session_factory, storage=storage)  # type: ignore[arg-type]
     old_delivered = _delivered_matter(matter_service, "old-delivered.docx")
     fresh_delivered = _delivered_matter(matter_service, "fresh-delivered.docx")
     active = matter_service.create_matter(
@@ -89,6 +103,42 @@ def test_retention_purges_only_old_delivered_matter_file_refs(
     assert fresh_files
     assert active_files
     assert report.matter_file_refs_deleted >= 1
+    assert report.storage_objects_deleted == report.matter_file_refs_deleted
+    assert storage.deleted
+    assert all("old-delivered" in object_name for _, object_name in storage.deleted)
+
+
+def test_attorney_retention_purge_endpoint_requires_attorney_and_runs(
+    session_factory: sessionmaker[Session],
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("PUBLIC_INTAKE_RETENTION_DAYS", "0")
+    original_service = attorney_router.retention_service
+    attorney_router.retention_service = RetentionService(session_factory, storage=DeletingStorage())  # type: ignore[arg-type]
+
+    def attorney_auth() -> AuthContext:
+        return AuthContext(
+            user_id="attorney",
+            email="attorney@example.com",
+            name="Attorney",
+            organisation_id="org_demo",
+            organisation_name="Demo",
+            role="attorney",
+        )
+
+    app.dependency_overrides[require_auth_context] = attorney_auth
+    try:
+        response = TestClient(app).post("/v1/attorney/retention/purge")
+    finally:
+        app.dependency_overrides.clear()
+        attorney_router.retention_service = original_service
+
+    assert response.status_code == 200
+    assert set(response.json()) == {
+        "public_intakes_deleted",
+        "matter_file_refs_deleted",
+        "storage_objects_deleted",
+    }
 
 
 def _delivered_matter(matter_service: MatterService, file_name: str):

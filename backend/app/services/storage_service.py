@@ -63,5 +63,16 @@ class StorageService:
             )
         return f"https://storage.googleapis.com/demo-download/{bucket}/{object_name}"
 
+    def delete_object(self, bucket: str, object_name: str) -> bool:
+        """Delete a confidential storage object when GCS credentials exist.
+
+        In local/demo mode there is no real bucket to mutate, so the method is
+        an explicit no-op that still lets retention complete against DB rows.
+        """
+        if os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+            self._blob(bucket, object_name).delete()
+            return True
+        return False
+
 
 storage_service = StorageService()

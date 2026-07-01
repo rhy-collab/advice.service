@@ -8,6 +8,7 @@ from app.schemas.matters import (
 )
 from app.services.auth import AuthContext, require_attorney_context
 from app.services.matter_service import matter_service
+from app.services.retention import RetentionReport, retention_service
 
 router = APIRouter(prefix="/attorney", tags=["attorney"])
 
@@ -34,3 +35,8 @@ def get_attorney_ai_prep(
     auth: AuthContext = Depends(require_attorney_context),
 ) -> AttorneyAIPrepResponse:
     return AttorneyAIPrepResponse(prep=matter_service.get_latest_ai_prep(matter_id, auth.organisation_id))
+
+
+@router.post("/retention/purge", response_model=RetentionReport)
+def purge_expired_data(auth: AuthContext = Depends(require_attorney_context)) -> RetentionReport:
+    return retention_service.purge_expired()
