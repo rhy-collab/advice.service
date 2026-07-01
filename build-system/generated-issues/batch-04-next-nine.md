@@ -41,11 +41,12 @@
 **Verification:** `npm run build`; backend `pytest -q`; manual click-test on preview.
 **Security/compliance:** No draft downloadable before approval; org isolation. **Files:** `frontend/src/*`, `app/routers/matters.py` (if needed), tests. **Depends on:** 3. **Done means:** the customer happy path is complete.
 
-## Issue 5 — AI prep engine v1 (internal-only) ⬜
+## Issue 5 — AI prep engine v1 (internal-only) ✅
 **Objective:** On upload, generate an **internal-only** plain-English summary + issue list; gate it from customers.
 **Why:** The first real "AI prepares" step.
 **Scope:** Document ingestion (reuse the checker's .docx extraction); call Anthropic behind an env key with a deterministic stub fallback when unset; store results against the matter; move `intake → ai_review → attorney_queue`; never expose to customers.
 **Acceptance:** Summary + issue list produced and stored internally; not visible via any customer endpoint; transitions recorded.
+**Current status:** Upload completion creates a deterministic internal prep record, records events, moves `intake → attorney_queue`, and exposes prep only through attorney/admin `/v1/attorney/matters/{id}/ai-prep`.
 **Verification:** `pytest -q` (with the stub).
 **Security/compliance:** Internal-only enforced server-side; no legal advice to customers. **Files:** `app/services/ai_engine.py`, `app/routers/matters.py`, migration, tests. **Depends on:** 3. **Done means:** AI prep runs and stays internal until approval.
 

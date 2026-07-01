@@ -111,6 +111,21 @@ def test_attorney_approve_route_delivers_review_matter(
     assert payload["matter"]["deliverableAvailable"] is True
 
 
+def test_attorney_can_read_internal_ai_prep(
+    attorney_client: tuple[TestClient, MatterService],
+) -> None:
+    client, service = attorney_client
+    queued = _create_queued_matter(service, "org_alpha", "prep-ready.docx")
+
+    response = client.get(f"/v1/attorney/matters/{queued.matter_id}/ai-prep")
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["prep"]["matterId"] == queued.matter_id
+    assert payload["prep"]["mode"] == "stub"
+    assert payload["prep"]["issues"]
+
+
 def _create_queued_matter(service: MatterService, organisation_id: str, file_name: str):
     created = service.create_matter(
         CreateMatterRequest(fileName=file_name, serviceTier="standard_redline", contractType="nda"),
@@ -118,6 +133,4 @@ def _create_queued_matter(service: MatterService, organisation_id: str, file_nam
     )
     service.mark_upload_complete(created.matter_id, organisation_id)
     service.mark_payment_status(created.matter_id, "paid")
-    service.transition_status(created.matter_id, organisation_id, "ai_review")
-    service.transition_status(created.matter_id, organisation_id, "attorney_queue")
     return created

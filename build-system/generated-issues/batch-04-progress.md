@@ -86,3 +86,23 @@
 
 **Remaining work**
 - Real end-to-end upload/payment smoke test requires live Clerk/Stripe/GCS credentials or a fuller mocked browser fixture.
+
+## Issue 5 — AI prep engine v1 (internal-only)
+
+**Status:** Completed
+
+**What changed**
+- Added `matter_ai_preps` persistence and migration.
+- Added an internal AI prep service with deterministic stub fallback when `ANTHROPIC_API_KEY` is unset.
+- Upload completion now creates an internal summary + issue list, records AI prep events, and moves the matter to `attorney_queue`.
+- Added attorney-only `GET /v1/attorney/matters/{matter_id}/ai-prep`.
+- Confirmed customer matter detail responses do not expose prep data.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+
+**Result**
+- Backend tests pass with the stub.
+
+**Remaining work**
+- Real Anthropic document ingestion needs live document retrieval from GCS plus a reviewed Anthropic prompt/client path. The current interface isolates that future integration behind `AIPrepService`.

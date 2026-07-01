@@ -230,6 +230,10 @@ These routes power `/attorney`. They require an attorney/admin role claim server
 
 Returns matters in `attorney_queue` or `attorney_review` for the active organisation.
 
+### `GET /v1/attorney/matters/{matter_id}/ai-prep`
+
+Returns the latest internal-only AI preparation summary and issue list for an attorney/admin. This is never returned by customer matter routes.
+
 ### `POST /v1/attorney/matters/{matter_id}/approve`
 
 Approves the final client deliverable. It requires attorney/admin auth, source upload complete, payment `paid`, and a matter status of `attorney_queue` or `attorney_review`. It records an `approved_redline` file, marks the matter `delivered`, and enables customer download.

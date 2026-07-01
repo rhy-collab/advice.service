@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 
+from app.schemas.ai import AttorneyAIPrepResponse
 from app.schemas.matters import (
     AttorneyApprovalRequest,
     AttorneyApprovalResponse,
@@ -25,3 +26,11 @@ def approve_attorney_matter(
     return AttorneyApprovalResponse(
         matter=matter_service.approve_deliverable(matter_id, auth.organisation_id, request)
     )
+
+
+@router.get("/matters/{matter_id}/ai-prep", response_model=AttorneyAIPrepResponse)
+def get_attorney_ai_prep(
+    matter_id: str,
+    auth: AuthContext = Depends(require_attorney_context),
+) -> AttorneyAIPrepResponse:
+    return AttorneyAIPrepResponse(prep=matter_service.get_latest_ai_prep(matter_id, auth.organisation_id))
