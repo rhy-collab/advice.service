@@ -3,7 +3,32 @@
 > Working name: **Charter Law** (domain: `charterlaw.services`). Treated as settled for now.
 > Owner: Rhys — **solo founder, non-technical but good at vibe-coding** (building the software himself with Claude Code / AI assistance, no separate developer).
 > Legal: one **reviewing attorney, paid per completed matter** (a contractor / cost-of-goods, not a salaried hire).
-> Status: **DRAFT v1** — living document. We refine this together before any code gets written.
+> Status: **BUILDING** — living document. The engineering foundation is now merged to `main` (see Build Progress below).
+
+---
+
+## Build Progress (live) — updated 1 July 2026
+
+**Merged to `main`:** the first working slice of software — a reviewed, hardened **web portal foundation**.
+
+What's built and in `main` now:
+- **Backend** (FastAPI + SQLAlchemy + Alembic): matters, files, and an audit/events trail; the full matter lifecycle; Stripe checkout + webhook; file upload targets; attorney-approval action.
+- **Customer portal** (Vite + React + TypeScript): landing, portal, and admin pages against the backend.
+- **Security/compliance enforced in code:** organisation-scoped data isolation on every request; the delivery gate (a matter cannot reach `delivered` without a recorded **attorney-role** approval); fail-closed auth; short-lived **signed** URLs for uploads and downloads; demo seeding disabled by default.
+- **Tests + CI:** a passing suite (lifecycle, auth, org-isolation, attorney-role gate) that runs automatically on every pull request.
+
+This was built by Codex, then independently reviewed and hardened (see `codex-review-01.md`) — two HIGH issues (a self-approval hole and an import bug) plus several security defaults were fixed before merge.
+
+### Honest gates still standing between here and "production ready"
+Merging this foundation is real progress, but it is **not** production-ready yet. Before a real client contract can flow through it:
+1. **Separate attorney app** — approval currently lives in the customer API behind a role check; the real attorney workbench (and cross-org attorney routing) still needs building (Phase 4 / Batch 06).
+2. **Deploy + monitoring** — Docker + Cloud Run deploy and Sentry are not wired yet (Batch 01 #9).
+3. **Live accounts** — Clerk, Stripe, Cloud SQL, GCS, and Anthropic must be created and their keys set (Phase 0 checklist in `charter-law-setup-hub.md`).
+4. **The AI engine + playbook + feedback loop** — the core moat (Phase 4 / Batches 04-06) is not built.
+5. **The one-off security review** — must pass before real, confidential contracts are accepted (Batch 03 #3.8).
+6. **The legal foundation** — reviewing attorney engaged and the compliance structure confirmed with counsel (Phase 0). *This gates everything, regardless of software.*
+
+In short: the **skeleton is production-grade and merged**; the **product is not production-ready** until the items above are done. Next natural build step: wire deploy + monitoring, then start the AI engine (Batch 04).
 
 ---
 
