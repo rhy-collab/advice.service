@@ -4,7 +4,9 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.models.matter import MatterAIPrepModel, MatterFileModel
+from app.schemas.playbook import PlaybookCheckCreate, PlaybookCreate
 from app.services.matter_service import MatterService
+from app.services.playbook_service import PlaybookService
 
 
 def test_delivery_requires_attorney_approval(matter_service: MatterService) -> None:
@@ -48,6 +50,7 @@ def test_created_matter_persists_in_database(matter_service: MatterService) -> N
     created_summary = next(matter for matter in matters if matter.id == created.matter_id)
     assert created_summary.upload_status == "awaiting_upload"
     assert created_summary.payment_status == "unpaid"
+    assert created_summary.contract_type == "vendor_saas"
 
 
 def test_created_matter_records_source_file(
@@ -238,6 +241,48 @@ def test_upload_completion_creates_internal_ai_prep(
         ).all()
 
     assert len(prep_rows) == 1
+
+
+def test_upload_completion_uses_matching_playbook_checks(
+    matter_service: MatterService,
+    session_factory: sessionmaker[Session],
+) -> None:
+    from app.schemas.matters import CreateMatterRequest
+
+    playbooks = PlaybookService(session_factory)
+    playbook = playbooks.create_playbook(
+        PlaybookCreate(name="Vendor SaaS baseline", contract_type="vendor_saas", jurisdiction="general")
+    )
+    playbooks.add_check(
+        playbook.id,
+        PlaybookCheckCreate(
+            key="liability_cap",
+            title="Check liability cap",
+            detection="Find cap wording and carve-outs.",
+            severity="high",
+            remediation_intent="Align the cap with the commercial value and preserve key carve-outs.",
+            preferred_language="Cap liability at fees paid in the prior 12 months with standard carve-outs.",
+            acceptable_fallback="Annual fees cap with confidentiality and IP carve-outs.",
+            unacceptable_fallback="Unlimited customer liability while vendor liability is narrowly capped.",
+        ),
+    )
+
+    created = matter_service.create_matter(
+        CreateMatterRequest(
+            fileName="playbook-prep.docx",
+            serviceTier="standard_redline",
+            contractType="vendor_saas",
+        ),
+        "org_demo",
+    )
+
+    matter_service.mark_upload_complete(created.matter_id, "org_demo")
+    prep = matter_service.get_latest_ai_prep(created.matter_id, "org_demo")
+
+    assert "structured playbook check" in prep.summary
+    assert prep.issues[0].title == "Check liability cap"
+    assert prep.issues[0].playbook_check_key == "liability_cap"
+    assert prep.issues[0].playbook_check_id is not None
 
 
 def test_ai_prep_is_org_scoped(matter_service: MatterService) -> None:

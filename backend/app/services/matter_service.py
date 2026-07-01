@@ -23,6 +23,7 @@ from app.schemas.matters import (
 )
 from app.services.ai_prep_service import ai_prep_service, issues_from_json, issues_to_json
 from app.services.notifications import NotificationService, notification_service
+from app.services.playbook_service import PlaybookService
 from app.services.storage_service import StorageService, storage_service
 
 
@@ -42,11 +43,13 @@ class MatterService:
         session_factory: Callable[[], Session] | sessionmaker[Session] = SessionLocal,
         storage: StorageService = storage_service,
         notifications: NotificationService = notification_service,
+        playbooks: PlaybookService | None = None,
         seed_demo: bool = False,
     ) -> None:
         self._session_factory = session_factory
         self._storage = storage
         self._notifications = notifications
+        self._playbooks = playbooks or PlaybookService(session_factory)
         if seed_demo:
             self.seed_demo_data()
 
@@ -82,6 +85,7 @@ class MatterService:
                 organisation_id=organisation_id,
                 file_name=request.file_name,
                 service_tier=request.service_tier,
+                contract_type=request.contract_type,
                 status="intake",
                 upload_status="awaiting_upload",
                 payment_status="unpaid",
@@ -162,7 +166,11 @@ class MatterService:
                         note="Internal AI preparation started after upload.",
                     )
                 )
-                prep = ai_prep_service.generate_for_uploaded_contract(matter.file_name, matter.service_tier)
+                prep = ai_prep_service.generate_for_uploaded_contract(
+                    matter.file_name,
+                    matter.service_tier,
+                    self._playbook_checks_for_contract(matter.contract_type),
+                )
                 matter.ai_preps.append(
                     MatterAIPrepModel(
                         mode=prep.mode,
@@ -350,6 +358,7 @@ class MatterService:
                     organisation_id=organisation_id,
                     file_name=file_name,
                     service_tier="standard_redline",
+                    contract_type="demo",
                     status=status,
                     upload_status="uploaded",
                     payment_status="paid" if status == "delivered" else "checkout_pending",
@@ -417,12 +426,19 @@ class MatterService:
             return None
         return db.scalar(select(MatterModel).where(MatterModel.checkout_session_id == checkout_session_id))
 
+    def _playbook_checks_for_contract(self, contract_type: str):
+        playbooks = self._playbooks.list_playbooks(contract_type=contract_type)
+        if not playbooks:
+            return []
+        return playbooks[0].checks
+
 
 def matter_to_summary(matter: MatterModel) -> MatterSummary:
     return MatterSummary(
         id=matter.id,
         file_name=matter.file_name,
         service_tier=matter.service_tier,  # type: ignore[arg-type]
+        contract_type=matter.contract_type,
         status=matter.status,  # type: ignore[arg-type]
         upload_status=matter.upload_status,  # type: ignore[arg-type]
         payment_status=matter.payment_status,  # type: ignore[arg-type]

@@ -13,6 +13,7 @@ class MatterModel(Base):
     organisation_id: Mapped[str] = mapped_column(String(128), index=True)
     file_name: Mapped[str] = mapped_column(String(512))
     service_tier: Mapped[str] = mapped_column(String(64))
+    contract_type: Mapped[str] = mapped_column(String(128), default="unknown")
     status: Mapped[str] = mapped_column(String(64), index=True)
     upload_status: Mapped[str] = mapped_column(String(64), default="awaiting_upload")
     payment_status: Mapped[str] = mapped_column(String(64), default="unpaid")

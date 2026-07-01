@@ -15,11 +15,12 @@
 **Verification:** `pytest -q`.
 **Security/compliance:** True deletion of confidential material. **Files:** `app/services/storage_service.py`, `app/services/retention.py`, trigger, tests. **Depends on:** —. **Done means:** deletion is real end-to-end.
 
-## Issue 2 — Playbook-driven AI prep ⬜
+## Issue 2 — Playbook-driven AI prep ✅
 **Objective:** The AI prep engine generates its issue list from the matter's contract-type **playbook checks**, not generic prompts.
 **Why:** The playbook is the accuracy moat; AI must run against it.
 **Scope:** Resolve the playbook for the contract type; for each check produce a structured finding (which check fired, severity, confidence); store findings linked to their check id.
 **Acceptance:** AI prep issues reference specific playbook checks; internal-only; tests with a seeded playbook.
+**Current status:** Matters now persist `contract_type`; upload completion resolves matching playbook checks; generated AI prep issues store `playbook_check_id` and `playbook_check_key` while preserving the no-playbook fallback.
 **Verification:** `pytest -q`.
 **Security/compliance:** Internal-only preserved. **Files:** `app/services/ai_prep_service.py`, `app/services/playbook_service.py`, `app/models/*`, migration, tests. **Depends on:** —. **Done means:** AI prep is playbook-grounded.
 

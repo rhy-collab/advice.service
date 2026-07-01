@@ -24,6 +24,7 @@ class MatterSummary(BaseModel):
     id: str
     file_name: str = Field(serialization_alias="fileName")
     service_tier: ServiceTier = Field(serialization_alias="serviceTier")
+    contract_type: str = Field(serialization_alias="contractType")
     status: MatterStatus
     upload_status: UploadStatus = Field(serialization_alias="uploadStatus")
     payment_status: PaymentStatus = Field(serialization_alias="paymentStatus")

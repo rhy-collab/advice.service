@@ -4,14 +4,18 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 PrepMode = Literal["stub", "anthropic"]
-PrepSeverity = Literal["low", "medium", "high"]
+PrepSeverity = Literal["low", "medium", "high", "critical"]
 
 
 class AIPrepIssue(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     title: str
     severity: PrepSeverity
     detail: str
     confidence: Literal["weak", "medium", "strong"]
+    playbook_check_id: str | None = Field(default=None, serialization_alias="playbookCheckId")
+    playbook_check_key: str | None = Field(default=None, serialization_alias="playbookCheckKey")
 
 
 class AIPrepResult(BaseModel):

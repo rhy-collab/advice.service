@@ -5,6 +5,7 @@ import json
 import os
 
 from app.schemas.ai import AIPrepIssue
+from app.schemas.playbook import PlaybookCheck
 
 
 @dataclass(frozen=True)
@@ -15,12 +16,44 @@ class GeneratedAIPrep:
 
 
 class AIPrepService:
-    def generate_for_uploaded_contract(self, file_name: str, service_tier: str) -> GeneratedAIPrep:
+    def generate_for_uploaded_contract(
+        self,
+        file_name: str,
+        service_tier: str,
+        playbook_checks: list[PlaybookCheck] | None = None,
+    ) -> GeneratedAIPrep:
         if os.getenv("ANTHROPIC_API_KEY"):
-            return self._anthropic_placeholder(file_name, service_tier)
-        return self._deterministic_stub(file_name, service_tier)
+            return self._anthropic_placeholder(file_name, service_tier, playbook_checks or [])
+        return self._deterministic_stub(file_name, service_tier, playbook_checks or [])
 
-    def _deterministic_stub(self, file_name: str, service_tier: str) -> GeneratedAIPrep:
+    def _deterministic_stub(
+        self,
+        file_name: str,
+        service_tier: str,
+        playbook_checks: list[PlaybookCheck] | None = None,
+    ) -> GeneratedAIPrep:
+        checks = playbook_checks or []
+        if checks:
+            return GeneratedAIPrep(
+                mode="stub",
+                summary=(
+                    f"Internal preparation summary for {file_name}: uploaded for {service_tier}. "
+                    f"Attorney review should apply {len(checks)} structured playbook check(s). "
+                    "This is internal preparation only."
+                ),
+                issues=[
+                    AIPrepIssue(
+                        title=check.title,
+                        severity=check.severity,
+                        detail=f"{check.detection} Remediation intent: {check.remediation_intent}",
+                        confidence="medium",
+                        playbook_check_id=check.id,
+                        playbook_check_key=check.key,
+                    )
+                    for check in checks
+                ],
+            )
+
         return GeneratedAIPrep(
             mode="stub",
             summary=(
@@ -50,11 +83,16 @@ class AIPrepService:
             ],
         )
 
-    def _anthropic_placeholder(self, file_name: str, service_tier: str) -> GeneratedAIPrep:
+    def _anthropic_placeholder(
+        self,
+        file_name: str,
+        service_tier: str,
+        playbook_checks: list[PlaybookCheck],
+    ) -> GeneratedAIPrep:
         # The integration boundary is intentionally isolated here. Until the
         # Anthropic client and document retrieval path are wired, production
         # keeps deterministic behavior rather than making an unreviewed call.
-        generated = self._deterministic_stub(file_name, service_tier)
+        generated = self._deterministic_stub(file_name, service_tier, playbook_checks)
         return GeneratedAIPrep(mode="anthropic", summary=generated.summary, issues=generated.issues)
 
 
