@@ -34,6 +34,7 @@ class MatterSummary(BaseModel):
     deliverable_available: bool = Field(default=False, serialization_alias="deliverableAvailable")
     risk_score: int = Field(default=0, serialization_alias="riskScore")
     risk_route: RiskRoute = Field(default="standard_review", serialization_alias="riskRoute")
+    attorney_review_minutes: int | None = Field(default=None, serialization_alias="attorneyReviewMinutes")
 
 
 class MatterEvent(BaseModel):
@@ -104,6 +105,16 @@ class AttorneyApprovalRequest(BaseModel):
 
 
 class AttorneyApprovalResponse(BaseModel):
+    matter: MatterSummary
+
+
+class AttorneyReviewMinutesRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    minutes: int = Field(ge=0, le=600)
+
+
+class AttorneyReviewMinutesResponse(BaseModel):
     matter: MatterSummary
 
 

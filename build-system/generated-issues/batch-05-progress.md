@@ -145,3 +145,28 @@
 
 **Remaining work**
 - Add the live production secret outside git before expecting real AI output in deployment.
+
+## Issue 7 — Attorney workbench v2
+
+**Status:** Completed
+
+**What changed**
+- Added attorney review-minutes storage and an attorney-only minutes endpoint.
+- Added a dedicated `/attorney` workbench page instead of reusing the delivery queue page.
+- The workbench shows queued matters, risk route, risk score, AI-prep summary, issue confidence, and playbook keys.
+- Attorneys can Apply, Dismiss, or Edit AI issues from the UI, feeding the Issue 3 feedback endpoint.
+- Attorneys can record review minutes and approve delivery from the same surface.
+- Added frontend API helpers for AI prep, feedback, and review minutes.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 59 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Browser dogfood should be run on the workbench before launch polish, especially at mobile widths.

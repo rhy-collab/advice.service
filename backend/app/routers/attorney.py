@@ -5,6 +5,8 @@ from app.schemas.matters import (
     AttorneyApprovalRequest,
     AttorneyApprovalResponse,
     AttorneyQueueResponse,
+    AttorneyReviewMinutesRequest,
+    AttorneyReviewMinutesResponse,
 )
 from app.services.auth import AuthContext, require_attorney_context
 from app.services.matter_service import matter_service
@@ -26,6 +28,17 @@ def approve_attorney_matter(
 ) -> AttorneyApprovalResponse:
     return AttorneyApprovalResponse(
         matter=matter_service.approve_deliverable(matter_id, auth.organisation_id, request)
+    )
+
+
+@router.post("/matters/{matter_id}/review-minutes", response_model=AttorneyReviewMinutesResponse)
+def record_attorney_review_minutes(
+    matter_id: str,
+    request: AttorneyReviewMinutesRequest,
+    auth: AuthContext = Depends(require_attorney_context),
+) -> AttorneyReviewMinutesResponse:
+    return AttorneyReviewMinutesResponse(
+        matter=matter_service.record_attorney_review_minutes(matter_id, auth.organisation_id, request)
     )
 
 

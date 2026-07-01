@@ -20,6 +20,7 @@ from app.schemas.matters import (
     AttorneyApprovalRequest,
     CreateMatterRequest,
     CreateMatterResponse,
+    AttorneyReviewMinutesRequest,
     MatterDetailResponse,
     MatterEvent,
     MatterStatus,
@@ -318,6 +319,29 @@ class MatterService:
             self._notifications.notify_status_change(matter.id, organisation_id, "delivered")
             return matter_to_summary(matter)
 
+    def record_attorney_review_minutes(
+        self,
+        matter_id: str,
+        organisation_id: str,
+        request: AttorneyReviewMinutesRequest,
+    ) -> MatterSummary:
+        with self._session_factory() as db:
+            matter = self._get_matter_model(db, matter_id, organisation_id)
+            if matter is None:
+                raise HTTPException(status_code=404, detail="Matter not found")
+            matter.attorney_review_minutes = request.minutes
+            matter.events.append(
+                MatterEventModel(
+                    type="attorney_minutes_recorded",
+                    actor="attorney",
+                    occurred_at=datetime.now(timezone.utc),
+                    note=f"Attorney review minutes recorded: {request.minutes}.",
+                )
+            )
+            db.commit()
+            db.refresh(matter)
+            return matter_to_summary(matter)
+
     def delivery_download_url(self, matter_id: str, organisation_id: str) -> str:
         with self._session_factory() as db:
             matter = self._get_matter_model(db, matter_id, organisation_id)
@@ -539,6 +563,7 @@ def matter_to_summary(matter: MatterModel) -> MatterSummary:
         deliverable_available=matter.deliverable_available,
         risk_score=matter.risk_score,
         risk_route=matter.risk_route,  # type: ignore[arg-type]
+        attorney_review_minutes=matter.attorney_review_minutes,
     )
 
 

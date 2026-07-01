@@ -113,6 +113,22 @@ def test_attorney_approve_route_delivers_review_matter(
     assert payload["matter"]["deliverableAvailable"] is True
 
 
+def test_attorney_can_record_review_minutes(
+    attorney_client: tuple[TestClient, MatterService],
+) -> None:
+    client, service = attorney_client
+    queued = _create_queued_matter(service, "org_alpha", "minutes-ready.docx")
+
+    response = client.post(
+        f"/v1/attorney/matters/{queued.matter_id}/review-minutes",
+        json={"minutes": 18},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["matter"]["attorneyReviewMinutes"] == 18
+
+
 def test_attorney_can_read_internal_ai_prep(
     attorney_client: tuple[TestClient, MatterService],
 ) -> None:

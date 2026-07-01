@@ -23,6 +23,7 @@ class MatterModel(Base):
     deliverable_available: Mapped[bool] = mapped_column(Boolean, default=False)
     risk_score: Mapped[int] = mapped_column(Integer, default=0)
     risk_route: Mapped[str] = mapped_column(String(64), default="standard_review")
+    attorney_review_minutes: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     events: Mapped[list["MatterEventModel"]] = relationship(
         back_populates="matter",

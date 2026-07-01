@@ -60,11 +60,12 @@
 **Verification:** `pytest -q`.
 **Security/compliance:** Internal-only; no document content logged; confirm no-training posture. **Files:** `app/services/ai_prep_service.py`, `.env.example`, `BLOCKERS.md`, tests. **Depends on:** 2. **Done means:** real AI prep is available when keyed. *(Live key is a human step.)*
 
-## Issue 7 — Attorney workbench v2 (review surface) ⬜
+## Issue 7 — Attorney workbench v2 (review surface) ✅
 **Objective:** A real review surface: list AI issues with Apply/Dismiss + reasoning + confidence flags; capture attorney-minutes (HuRT).
 **Why:** The attorney's cockpit; HuRT is the margin metric.
 **Scope:** Attorney UI showing the AI prep (summary/issues/redline link) with per-issue Apply/Dismiss + reason; highlight weak-confidence items; record review minutes per matter; approve from here.
 **Acceptance:** Attorney can review, action issues (feeding Issue 3), and approve; HuRT recorded; UI builds.
+**Current status:** `/attorney` now renders a dedicated workbench with queue selection, AI-prep issues, Apply/Dismiss/Edit feedback, risk/confidence highlighting, review-minutes capture, and approval.
 **Verification:** `pytest -q`; `npm run build`.
 **Security/compliance:** Attorney-role only. **Files:** `frontend`/`attorney-app`, `app/routers/attorney.py`, tests. **Depends on:** 3, 5. **Done means:** the attorney works entirely in-app.
 
