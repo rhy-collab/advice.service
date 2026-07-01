@@ -126,6 +126,7 @@ def test_attorney_can_read_internal_ai_prep(
     assert payload["prep"]["matterId"] == queued.matter_id
     assert payload["prep"]["mode"] == "stub"
     assert payload["prep"]["issues"]
+    assert payload["prep"]["issues"][0]["confidence"] in {"weak", "medium", "strong"}
 
 
 def test_attorney_feedback_updates_linked_playbook_accuracy(

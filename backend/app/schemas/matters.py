@@ -16,6 +16,7 @@ ServiceTier = Literal["simple_review", "standard_redline", "full_negotiation"]
 AssistantMode = Literal["ai_preparation", "attorney"]
 UploadStatus = Literal["awaiting_upload", "uploaded"]
 PaymentStatus = Literal["unpaid", "checkout_pending", "paid", "failed", "refunded"]
+RiskRoute = Literal["fast_track", "standard_review", "escalate"]
 
 
 class MatterSummary(BaseModel):
@@ -31,6 +32,8 @@ class MatterSummary(BaseModel):
     submitted_at: datetime = Field(serialization_alias="submittedAt")
     next_update_eta_minutes: int | None = Field(default=None, serialization_alias="nextUpdateEtaMinutes")
     deliverable_available: bool = Field(default=False, serialization_alias="deliverableAvailable")
+    risk_score: int = Field(default=0, serialization_alias="riskScore")
+    risk_route: RiskRoute = Field(default="standard_review", serialization_alias="riskRoute")
 
 
 class MatterEvent(BaseModel):

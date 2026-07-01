@@ -42,11 +42,12 @@
 **Verification:** `pytest -q`.
 **Security/compliance:** Internal-only enforced server-side. **Files:** `app/services/ai_prep_service.py`, redline boundary module, schema, migration, tests. **Depends on:** 2. **Done means:** the full internal work product exists.
 
-## Issue 5 — Confidence scoring + risk-score routing ⬜
+## Issue 5 — Confidence scoring + risk-score routing ✅
 **Objective:** Surface per-issue confidence to the attorney and route matters by overall risk score.
 **Why:** Attorneys should look where the AI is unsure; low-risk matters fast-track, high-risk escalate.
 **Scope:** Ensure every issue carries strong/medium/weak; compute a matter risk score from checks; route on it (fast-track vs escalate); expose confidence in the attorney AI-prep view.
 **Acceptance:** Risk score computed + used for routing; confidence visible to attorney; tested.
+**Current status:** AI-prep confidence is exposed in the attorney response; matter summaries now carry `risk_score` and `risk_route`; upload completion computes the route from severity plus confidence.
 **Verification:** `pytest -q`.
 **Security/compliance:** none new. **Files:** `app/services/*`, `app/routers/attorney.py`, tests. **Depends on:** 2. **Done means:** confidence + routing drive attorney attention.
 

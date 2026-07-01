@@ -32,6 +32,7 @@ from app.services.ai_prep_service import ai_prep_service, issues_from_json, issu
 from app.services.deliverable_service import DeliverableService, deliverable_service
 from app.services.notifications import NotificationService, notification_service
 from app.services.playbook_service import PlaybookService
+from app.services.risk_service import RiskService, risk_service
 from app.services.storage_service import StorageService, storage_service
 
 
@@ -53,6 +54,7 @@ class MatterService:
         notifications: NotificationService = notification_service,
         playbooks: PlaybookService | None = None,
         deliverables: DeliverableService = deliverable_service,
+        risks: RiskService = risk_service,
         seed_demo: bool = False,
     ) -> None:
         self._session_factory = session_factory
@@ -60,6 +62,7 @@ class MatterService:
         self._notifications = notifications
         self._playbooks = playbooks or PlaybookService(session_factory)
         self._deliverables = deliverables
+        self._risks = risks
         if seed_demo:
             self.seed_demo_data()
 
@@ -189,6 +192,9 @@ class MatterService:
                         created_at=datetime.now(timezone.utc),
                     )
                 )
+                risk = self._risks.assess(prep.issues)
+                matter.risk_score = risk.score
+                matter.risk_route = risk.route
                 draft = self._deliverables.generate_internal_draft(matter.id, matter.file_name, prep.issues)
                 matter.draft_deliverables.append(
                     MatterDraftDeliverableModel(
@@ -210,7 +216,7 @@ class MatterService:
                         type="ai_prep_completed",
                         actor="system",
                         occurred_at=datetime.now(timezone.utc),
-                        note="Internal AI preparation completed and matter moved to attorney queue.",
+                        note=f"Internal AI preparation completed; risk route is {risk.route}.",
                     )
                 )
             db.commit()
@@ -389,6 +395,8 @@ class MatterService:
                     submitted_at=now,
                     next_update_eta_minutes=eta,
                     deliverable_available=status == "delivered",
+                    risk_score=2 if status == "delivered" else 5,
+                    risk_route="fast_track" if status == "delivered" else "standard_review",
                 )
                 matter.events.append(
                     MatterEventModel(
@@ -529,6 +537,8 @@ def matter_to_summary(matter: MatterModel) -> MatterSummary:
         submitted_at=matter.submitted_at,
         next_update_eta_minutes=matter.next_update_eta_minutes,
         deliverable_available=matter.deliverable_available,
+        risk_score=matter.risk_score,
+        risk_route=matter.risk_route,  # type: ignore[arg-type]
     )
 
 

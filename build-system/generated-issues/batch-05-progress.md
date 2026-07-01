@@ -96,3 +96,27 @@
 
 **Remaining work**
 - Replace the redline stub boundary with a real Word add-in or document-generation worker when that infrastructure exists.
+
+## Issue 5 — Confidence scoring + risk-score routing
+
+**Status:** Completed
+
+**What changed**
+- Added `RiskService` to score AI-prep issues from severity plus confidence.
+- Added `risk_score` and `risk_route` to matters and matter summaries.
+- Upload completion now stores the risk score and route after AI prep.
+- Attorney AI-prep responses continue to expose per-issue confidence.
+- Added tests for default escalation, playbook-scored routing, and attorney confidence visibility.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 56 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Issue 7 should visually prioritize weak-confidence and escalated matters in the attorney workbench.

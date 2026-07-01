@@ -105,6 +105,8 @@ def test_upload_complete_updates_matter_and_timeline(matter_service: MatterServi
 
     assert matter.upload_status == "uploaded"
     assert matter.status == "attorney_queue"
+    assert matter.risk_score == 11
+    assert matter.risk_route == "escalate"
     assert detail is not None
     assert any(event.type == "upload_completed" for event in detail.events)
     assert any(event.type == "ai_prep_completed" for event in detail.events)
@@ -283,6 +285,9 @@ def test_upload_completion_uses_matching_playbook_checks(
     assert prep.issues[0].title == "Check liability cap"
     assert prep.issues[0].playbook_check_key == "liability_cap"
     assert prep.issues[0].playbook_check_id is not None
+    summary = matter_service.require_matter(created.matter_id, "org_demo")
+    assert summary.risk_score == 4
+    assert summary.risk_route == "standard_review"
 
 
 def test_upload_completion_creates_internal_draft_deliverables(
