@@ -194,3 +194,29 @@
 
 **Remaining work**
 - Replace the demo preset playbook form actions with full field-by-field editing controls when attorneys start entering real playbook language.
+
+## Issue 9 — End-to-end tests + CI required checks
+
+**Status:** Completed with external settings blocker
+
+**What changed**
+- Added Playwright to the frontend.
+- Added E2E coverage for client portal demo upload/status/delivery-pending flow.
+- Added E2E coverage for attorney workbench issue action, review-minutes capture, and approval flow.
+- Added a CI `frontend-e2e` job that installs Chromium and runs `npm run e2e`.
+- Preserved the known branch-protection blocker in `BLOCKERS.md`.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `npm run e2e`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 61 passed, 3 existing warnings.
+- Frontend production build passed.
+- Playwright E2E passed: 2 passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Repository owner must enable required checks/branch protection after the GitHub plan or visibility blocker is resolved.

@@ -78,11 +78,12 @@
 **Verification:** `pytest -q`; `npm run build`.
 **Security/compliance:** Attorney/admin only. **Files:** `app/services/playbook_service.py`, `app/routers/*`, `frontend`, tests. **Depends on:** 2. **Done means:** the playbook is editable and layered.
 
-## Issue 9 — End-to-end tests + CI required checks ⬜
+## Issue 9 — End-to-end tests + CI required checks ✅
 **Objective:** Automated end-to-end coverage of the customer and attorney happy paths, and CI enforced as required.
 **Why:** Confidence to keep shipping fast without breaking the flow.
 **Scope:** Playwright (or equivalent) E2E for upload→status→download and attorney queue→review→approve; ensure CI runs them; confirm branch protection requires the checks.
 **Acceptance:** E2E green in CI; protection requires CI.
+**Current status:** Playwright E2E tests cover the demo client portal upload/status path and attorney workbench review/action/minutes/approval path; CI now installs Chromium and runs `npm run e2e`. Branch protection remains externally blocked by GitHub plan/settings.
 **Verification:** `pytest -q`; E2E run; `npm run build`.
 **Security/compliance:** none. **Files:** `frontend/e2e/*`, `.github/workflows/ci.yml`, tests. **Depends on:** 7. **Done means:** the core journeys are protected by automated tests. *(Branch-protection toggle is a human/GitHub-settings step.)*
 
