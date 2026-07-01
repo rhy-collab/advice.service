@@ -170,3 +170,27 @@
 
 **Remaining work**
 - Browser dogfood should be run on the workbench before launch polish, especially at mobile widths.
+
+## Issue 8 — Playbook authoring UI + per-client overlay
+
+**Status:** Completed
+
+**What changed**
+- Added optional `organisation_id` overlays to playbooks.
+- Playbook resolution now prefers the client overlay over the base playbook at review time.
+- Added attorney-only playbook list/create, check-create, and check-edit API routes.
+- Added tests for overlay resolution and attorney playbook authoring routes.
+- Added a playbook authoring panel to the attorney workbench with overlay, add-check, and strengthen-check actions.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 61 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Replace the demo preset playbook form actions with full field-by-field editing controls when attorneys start entering real playbook language.

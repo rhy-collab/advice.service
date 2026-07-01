@@ -92,6 +92,35 @@ type AttorneyReviewMinutesResponse = {
   matter: ApiMatter;
 };
 
+export type PlaybookCheck = {
+  id: string;
+  key: string;
+  title: string;
+  detection: string;
+  severity: "low" | "medium" | "high" | "critical";
+  remediationIntent: string;
+  preferredLanguage: string;
+  acceptableFallback: string;
+  unacceptableFallback: string;
+  accuracyCorrect: number;
+  accuracyTotal: number;
+  createdAt: string;
+};
+
+export type Playbook = {
+  id: string;
+  name: string;
+  contractType: string;
+  jurisdiction: string;
+  organisationId: string | null;
+  createdAt: string;
+  checks: PlaybookCheck[];
+};
+
+type PlaybookListResponse = {
+  playbooks: Playbook[];
+};
+
 export async function fetchPortalMatters(
   getAuthToken?: GetAuthToken,
 ): Promise<{ matters: Matter[]; source: PortalApiState }> {
@@ -357,6 +386,102 @@ export async function recordAttorneyReviewMinutes(
   return { matter: mapApiMatter(payload.matter), source: "api" };
 }
 
+export async function fetchPlaybooks(getAuthToken?: GetAuthToken): Promise<{ playbooks: Playbook[]; source: PortalApiState }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/attorney/playbooks`, {
+      headers: await authHeaders(getAuthToken),
+    });
+    if (!response.ok) {
+      throw new Error(`Playbook list failed: ${response.status}`);
+    }
+    return { playbooks: ((await response.json()) as PlaybookListResponse).playbooks, source: "api" };
+  } catch {
+    return { playbooks: demoPlaybooks(), source: "demo" };
+  }
+}
+
+export async function createPlaybookOverlay(getAuthToken?: GetAuthToken): Promise<{ playbook: Playbook; source: PortalApiState }> {
+  const body = {
+    name: "Client NDA overlay",
+    contract_type: "nda",
+    jurisdiction: "general",
+  };
+  try {
+    const response = await fetch(`${API_BASE_URL}/attorney/playbooks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(await authHeaders(getAuthToken)),
+      },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      throw new Error(`Playbook create failed: ${response.status}`);
+    }
+    return { playbook: (await response.json()) as Playbook, source: "api" };
+  } catch {
+    return { playbook: demoPlaybooks()[0], source: "demo" };
+  }
+}
+
+export async function addDefaultPlaybookCheck(
+  playbook: Playbook,
+  getAuthToken?: GetAuthToken,
+): Promise<{ playbook: Playbook; source: PortalApiState }> {
+  const body = {
+    key: `fallback_${Date.now()}`,
+    title: "Check fallback language",
+    detection: "Find fallback language for the negotiated risk position.",
+    severity: "medium",
+    remediation_intent: "Add a practical fallback that protects the client without blocking the deal.",
+    preferred_language: "Use the preferred Charter Law fallback for this risk.",
+    acceptable_fallback: "A narrower fallback is acceptable if the commercial risk is low.",
+    unacceptable_fallback: "No fallback position is recorded.",
+  };
+  if (playbook.id.startsWith("playbook_demo")) {
+    return { playbook: { ...playbook, checks: [...playbook.checks, demoCheck(body.key)] }, source: "demo" };
+  }
+  const response = await fetch(`${API_BASE_URL}/attorney/playbooks/${playbook.id}/checks`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders(getAuthToken)),
+    },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    throw new Error(`Playbook check create failed: ${response.status}`);
+  }
+  return { playbook: (await response.json()) as Playbook, source: "api" };
+}
+
+export async function strengthenPlaybookCheck(
+  check: PlaybookCheck,
+  getAuthToken?: GetAuthToken,
+): Promise<{ check: PlaybookCheck; source: PortalApiState }> {
+  if (check.id.startsWith("check_demo")) {
+    return {
+      check: { ...check, severity: "high", acceptableFallback: "Escalate this fallback unless client approves the risk." },
+      source: "demo",
+    };
+  }
+  const response = await fetch(`${API_BASE_URL}/attorney/playbooks/checks/${check.id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders(getAuthToken)),
+    },
+    body: JSON.stringify({
+      severity: "high",
+      acceptable_fallback: "Escalate this fallback unless client approves the risk.",
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Playbook check update failed: ${response.status}`);
+  }
+  return { check: (await response.json()) as PlaybookCheck, source: "api" };
+}
+
 export async function fetchDeliverableUrl(matterId: string, getAuthToken?: GetAuthToken): Promise<string> {
   const response = await fetch(`${API_BASE_URL}/matters/${matterId}/download`, {
     headers: await authHeaders(getAuthToken),
@@ -435,6 +560,37 @@ function demoAIPrep(matter: Matter): AIPrepResult {
         playbookCheckKey: "termination",
       },
     ],
+  };
+}
+
+function demoPlaybooks(): Playbook[] {
+  return [
+    {
+      id: "playbook_demo_nda",
+      name: "Demo NDA overlay",
+      contractType: "nda",
+      jurisdiction: "general",
+      organisationId: "demo",
+      createdAt: new Date().toISOString(),
+      checks: [demoCheck("mutuality")],
+    },
+  ];
+}
+
+function demoCheck(key: string): PlaybookCheck {
+  return {
+    id: `check_demo_${key}`,
+    key,
+    title: "Confirm NDA mutuality",
+    detection: "Find whether confidentiality obligations apply to one or both parties.",
+    severity: "medium",
+    remediationIntent: "Make obligations mutual unless one-way treatment is justified.",
+    preferredLanguage: "Both parties protect confidential information using reciprocal obligations.",
+    acceptableFallback: "One-way obligations are acceptable only for a clear business reason.",
+    unacceptableFallback: "Founder discloses sensitive information without reciprocal protection.",
+    accuracyCorrect: 0,
+    accuracyTotal: 0,
+    createdAt: new Date().toISOString(),
   };
 }
 

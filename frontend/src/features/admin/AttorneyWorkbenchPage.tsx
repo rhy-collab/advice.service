@@ -12,12 +12,17 @@ import { SiteHeader } from "../../components/SiteHeader";
 import { Matter, matters as fallbackMatters } from "../../lib/demoData";
 import {
   AIPrepResult,
+  addDefaultPlaybookCheck,
   approveMatterDeliverable,
+  createPlaybookOverlay,
   fetchAttorneyAIPrep,
   fetchAttorneyQueue,
+  fetchPlaybooks,
   GetAuthToken,
+  Playbook,
   PortalApiState,
   recordAttorneyReviewMinutes,
+  strengthenPlaybookCheck,
   submitAttorneyAIPrepFeedback,
 } from "../../lib/portalApi";
 
@@ -38,6 +43,7 @@ export function AttorneyWorkbenchPage({
   const [prep, setPrep] = useState<AIPrepResult | null>(null);
   const [minutes, setMinutes] = useState(0);
   const [apiSource, setApiSource] = useState<PortalApiState>("demo");
+  const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [actionState, setActionState] = useState<ActionState>({ message: "", status: "idle" });
 
@@ -51,6 +57,13 @@ export function AttorneyWorkbenchPage({
       setSelectedId((current) => current || result.matters[0]?.id || "");
       setApiSource(result.source);
       setIsLoading(false);
+    });
+    fetchPlaybooks(getAuthToken).then((result) => {
+      if (!isActive) {
+        return;
+      }
+      setPlaybooks(result.playbooks);
+      setApiSource(result.source);
     });
     return () => {
       isActive = false;
@@ -131,6 +144,52 @@ export function AttorneyWorkbenchPage({
       setActionState({ message: "Matter approved for client delivery.", status: "success" });
     } catch {
       setActionState({ message: "Approval failed. Upload and payment must be complete.", status: "error" });
+    }
+  }
+
+  async function createOverlay() {
+    setActionState({ message: "Creating playbook overlay...", status: "pending" });
+    try {
+      const result = await createPlaybookOverlay(getAuthToken);
+      setPlaybooks((current) => [result.playbook, ...current.filter((playbook) => playbook.id !== result.playbook.id)]);
+      setApiSource(result.source);
+      setActionState({ message: "Playbook overlay ready.", status: "success" });
+    } catch {
+      setActionState({ message: "Playbook overlay was not created.", status: "error" });
+    }
+  }
+
+  async function addCheck(playbook: Playbook) {
+    setActionState({ message: "Adding playbook check...", status: "pending" });
+    try {
+      const result = await addDefaultPlaybookCheck(playbook, getAuthToken);
+      setPlaybooks((current) => current.map((item) => (item.id === result.playbook.id ? result.playbook : item)));
+      setApiSource(result.source);
+      setActionState({ message: "Playbook check added.", status: "success" });
+    } catch {
+      setActionState({ message: "Playbook check was not added.", status: "error" });
+    }
+  }
+
+  async function strengthenCheck(playbook: Playbook) {
+    const check = playbook.checks[0];
+    if (!check) {
+      return;
+    }
+    setActionState({ message: "Updating playbook check...", status: "pending" });
+    try {
+      const result = await strengthenPlaybookCheck(check, getAuthToken);
+      setPlaybooks((current) =>
+        current.map((item) =>
+          item.id === playbook.id
+            ? { ...item, checks: item.checks.map((existing) => (existing.id === result.check.id ? result.check : existing)) }
+            : item,
+        ),
+      );
+      setApiSource(result.source);
+      setActionState({ message: "Playbook check updated.", status: "success" });
+    } catch {
+      setActionState({ message: "Playbook check was not updated.", status: "error" });
     }
   }
 
@@ -260,6 +319,45 @@ export function AttorneyWorkbenchPage({
             </section>
           )}
         </div>
+
+        <section className="playbook-panel" aria-label="Playbook authoring">
+          <div className="playbook-panel-head">
+            <div>
+              <span className="portal-label">Playbook authoring</span>
+              <h2>Client overlays</h2>
+            </div>
+            <button className="approve-button" onClick={createOverlay} type="button">
+              <Pencil size={16} />
+              New overlay
+            </button>
+          </div>
+
+          <div className="playbook-list">
+            {playbooks.map((playbook) => (
+              <article className="playbook-row" key={playbook.id}>
+                <div>
+                  <h3>{playbook.name}</h3>
+                  <p>
+                    {playbook.contractType} · {playbook.organisationId ? "Client overlay" : "Base"} · {playbook.checks.length} checks
+                  </p>
+                  {playbook.checks[0] && (
+                    <small>
+                      {playbook.checks[0].title} · {playbook.checks[0].severity} · {playbook.checks[0].acceptableFallback}
+                    </small>
+                  )}
+                </div>
+                <div className="playbook-actions">
+                  <button onClick={() => addCheck(playbook)} type="button">
+                    Add check
+                  </button>
+                  <button disabled={!playbook.checks[0]} onClick={() => strengthenCheck(playbook)} type="button">
+                    Strengthen
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       </section>
     </main>
   );

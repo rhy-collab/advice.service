@@ -8,7 +8,7 @@ from app.config import load_settings, validate_settings
 from app.db.session import SessionLocal, run_migrations
 from app.middleware.public_hardening import PublicEndpointHardeningMiddleware
 from app.observability import RequestIdMiddleware, init_sentry
-from app.routers import attorney, matters, public, reports, users
+from app.routers import attorney, matters, playbooks, public, reports, users
 from app.services.matter_service import matter_service
 
 app = FastAPI(title="Charter Law API", version="0.1.0")
@@ -57,6 +57,7 @@ def health_ready() -> dict[str, str]:
 
 app.include_router(users.router, prefix="/v1")
 app.include_router(attorney.router, prefix="/v1")
+app.include_router(playbooks.router, prefix="/v1")
 app.include_router(matters.router, prefix="/v1")
 app.include_router(reports.router, prefix="/v1")
 app.include_router(public.router, prefix="/v1")

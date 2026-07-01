@@ -65,3 +65,19 @@ def test_seed_nda_playbook_is_idempotent(session_factory: sessionmaker[Session])
     assert first.id == second.id
     assert first.contract_type == "nda"
     assert first.checks[0].key == "mutuality"
+
+
+def test_resolve_for_contract_prefers_organisation_overlay(session_factory: sessionmaker[Session]) -> None:
+    service = PlaybookService(session_factory)
+    base = service.create_playbook(PlaybookCreate(name="Base NDA", contract_type="nda"))
+    overlay = service.create_playbook(
+        PlaybookCreate(name="Client NDA", contract_type="nda", organisationId="org_alpha")
+    )
+
+    resolved = service.resolve_for_contract("nda", organisation_id="org_alpha")
+    fallback = service.resolve_for_contract("nda", organisation_id="org_beta")
+
+    assert resolved is not None
+    assert resolved.id == overlay.id
+    assert fallback is not None
+    assert fallback.id == base.id

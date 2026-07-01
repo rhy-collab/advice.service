@@ -69,11 +69,12 @@
 **Verification:** `pytest -q`; `npm run build`.
 **Security/compliance:** Attorney-role only. **Files:** `frontend`/`attorney-app`, `app/routers/attorney.py`, tests. **Depends on:** 3, 5. **Done means:** the attorney works entirely in-app.
 
-## Issue 8 — Playbook authoring UI + per-client overlay ⬜
+## Issue 8 — Playbook authoring UI + per-client overlay ✅
 **Objective:** A screen to define/edit playbook checks, plus per-client overlays on a firm-wide base.
 **Why:** You/the attorney must be able to shape the moat without code.
 **Scope:** CRUD UI for checks (detection, severity, fallback language); per-org overlay that resolves over the base at review time.
 **Acceptance:** Checks editable in-app; per-client overrides apply; tested.
+**Current status:** Attorney-only playbook APIs now support organisation overlays, check creation, and check edits; the workbench includes a playbook authoring panel for overlays and checks.
 **Verification:** `pytest -q`; `npm run build`.
 **Security/compliance:** Attorney/admin only. **Files:** `app/services/playbook_service.py`, `app/routers/*`, `frontend`, tests. **Depends on:** 2. **Done means:** the playbook is editable and layered.
 

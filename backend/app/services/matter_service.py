@@ -183,7 +183,7 @@ class MatterService:
                 prep = ai_prep_service.generate_for_uploaded_contract(
                     matter.file_name,
                     matter.service_tier,
-                    self._playbook_checks_for_contract(matter.contract_type),
+                    self._playbook_checks_for_contract(matter.contract_type, matter.organisation_id),
                 )
                 matter.ai_preps.append(
                     MatterAIPrepModel(
@@ -542,11 +542,11 @@ class MatterService:
             return None
         return db.scalar(select(MatterModel).where(MatterModel.checkout_session_id == checkout_session_id))
 
-    def _playbook_checks_for_contract(self, contract_type: str):
-        playbooks = self._playbooks.list_playbooks(contract_type=contract_type)
-        if not playbooks:
+    def _playbook_checks_for_contract(self, contract_type: str, organisation_id: str):
+        playbook = self._playbooks.resolve_for_contract(contract_type=contract_type, organisation_id=organisation_id)
+        if playbook is None:
             return []
-        return playbooks[0].checks
+        return playbook.checks
 
 
 def matter_to_summary(matter: MatterModel) -> MatterSummary:
