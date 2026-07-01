@@ -37,6 +37,11 @@ class MatterModel(Base):
         cascade="all, delete-orphan",
         order_by="MatterAIPrepModel.created_at",
     )
+    ai_feedback: Mapped[list["MatterAIFeedbackModel"]] = relationship(
+        back_populates="matter",
+        cascade="all, delete-orphan",
+        order_by="MatterAIFeedbackModel.created_at",
+    )
 
 
 class MatterEventModel(Base):
@@ -78,3 +83,18 @@ class MatterAIPrepModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     matter: Mapped[MatterModel] = relationship(back_populates="ai_preps")
+
+
+class MatterAIFeedbackModel(Base):
+    __tablename__ = "matter_ai_feedback"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    matter_id: Mapped[str] = mapped_column(ForeignKey("matters.id", ondelete="CASCADE"), index=True)
+    playbook_check_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    issue_title: Mapped[str] = mapped_column(String(256))
+    action: Mapped[str] = mapped_column(String(64))
+    reason_tag: Mapped[str] = mapped_column(String(128))
+    corrected_detail: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    matter: Mapped[MatterModel] = relationship(back_populates="ai_feedback")

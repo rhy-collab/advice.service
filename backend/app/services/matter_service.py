@@ -7,8 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.session import SessionLocal
-from app.models.matter import MatterAIPrepModel, MatterEventModel, MatterFileModel, MatterModel
-from app.schemas.ai import AIPrepResult
+from app.models.matter import MatterAIFeedbackModel, MatterAIPrepModel, MatterEventModel, MatterFileModel, MatterModel
+from app.schemas.ai import AIPrepFeedbackRequest, AIPrepFeedbackResponse, AIPrepResult
 from app.schemas.matters import (
     AttorneyApprovalRequest,
     CreateMatterRequest,
@@ -402,6 +402,66 @@ class MatterService:
                 issues=issues_from_json(prep.issues_json),
                 created_at=prep.created_at,
             )
+
+    def record_ai_prep_feedback(
+        self,
+        matter_id: str,
+        organisation_id: str,
+        request: AIPrepFeedbackRequest,
+    ) -> AIPrepFeedbackResponse:
+        with self._session_factory() as db:
+            matter = self._get_matter_model(db, matter_id, organisation_id)
+            if matter is None:
+                raise HTTPException(status_code=404, detail="Matter not found")
+            prep = db.scalar(
+                select(MatterAIPrepModel)
+                .where(MatterAIPrepModel.matter_id == matter_id)
+                .order_by(MatterAIPrepModel.created_at.desc(), MatterAIPrepModel.id.desc())
+            )
+            if prep is None:
+                raise HTTPException(status_code=404, detail="Internal AI preparation not found")
+
+            issues = issues_from_json(prep.issues_json)
+            if request.issue_index >= len(issues):
+                raise HTTPException(status_code=404, detail="AI preparation issue not found")
+
+            issue = issues[request.issue_index]
+            feedback = MatterAIFeedbackModel(
+                matter_id=matter_id,
+                playbook_check_id=issue.playbook_check_id,
+                issue_title=issue.title,
+                action=request.action,
+                reason_tag=request.reason_tag,
+                corrected_detail=request.corrected_detail,
+            )
+            db.add(feedback)
+            matter.events.append(
+                MatterEventModel(
+                    type="ai_prep_feedback_recorded",
+                    actor="attorney",
+                    occurred_at=datetime.now(timezone.utc),
+                    note=f"Attorney marked AI issue '{issue.title}' as {request.action}.",
+                )
+            )
+            db.commit()
+
+        accuracy: tuple[int, int] | None = None
+        if issue.playbook_check_id:
+            accuracy = self._playbooks.record_check_feedback(
+                issue.playbook_check_id,
+                was_correct=request.action == "apply",
+                corrected_detail=request.corrected_detail if request.action == "edit" else None,
+            )
+
+        return AIPrepFeedbackResponse(
+            matter_id=matter_id,
+            issue_title=issue.title,
+            action=request.action,
+            reason_tag=request.reason_tag,
+            playbook_check_id=issue.playbook_check_id,
+            accuracy_correct=accuracy[0] if accuracy else None,
+            accuracy_total=accuracy[1] if accuracy else None,
+        )
 
     def activity_report(self, organisation_id: str) -> dict:
         with self._session_factory() as db:

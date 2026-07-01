@@ -47,3 +47,28 @@
 
 **Remaining work**
 - Later Anthropic integration should use the same playbook-check context instead of inventing a separate prompt shape.
+
+## Issue 3 — Attorney feedback loop
+
+**Status:** Completed
+
+**What changed**
+- Added durable `matter_ai_feedback` storage for attorney AI-prep corrections.
+- Added attorney endpoint: `POST /v1/attorney/matters/{matter_id}/ai-prep/feedback`.
+- Feedback records the action, reason tag, corrected detail, issue title, and linked playbook check id when present.
+- Linked playbook checks now update accuracy counters from attorney feedback.
+- Edit feedback can update the check's acceptable fallback language.
+- Added attorney-route tests for apply and edit feedback paths.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 55 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- The frontend workbench in Issue 7 should call this endpoint from Apply/Dismiss/Edit controls.

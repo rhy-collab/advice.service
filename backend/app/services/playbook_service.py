@@ -66,6 +66,24 @@ class PlaybookService:
             db.refresh(row)
             return playbook_to_schema(row)
 
+    def record_check_feedback(
+        self,
+        check_id: str,
+        was_correct: bool,
+        corrected_detail: str | None = None,
+    ) -> tuple[int, int] | None:
+        with self._session_factory() as db:
+            check = db.get(PlaybookCheckModel, check_id)
+            if check is None:
+                return None
+            check.accuracy_total += 1
+            if was_correct:
+                check.accuracy_correct += 1
+            if corrected_detail:
+                check.acceptable_fallback = corrected_detail
+            db.commit()
+            return check.accuracy_correct, check.accuracy_total
+
     def seed_nda_playbook(self) -> Playbook:
         existing = self.list_playbooks(contract_type="nda")
         if existing:

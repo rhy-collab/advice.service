@@ -6,8 +6,10 @@ from sqlalchemy.orm import Session, sessionmaker
 
 from app.main import app
 from app.schemas.matters import CreateMatterRequest
+from app.schemas.playbook import PlaybookCheckCreate, PlaybookCreate
 from app.services.auth import AuthContext, require_auth_context
 from app.services.matter_service import MatterService
+from app.services.playbook_service import PlaybookService
 from app.services.storage_service import UploadTargetData
 import app.routers.attorney as attorney_router
 
@@ -124,6 +126,90 @@ def test_attorney_can_read_internal_ai_prep(
     assert payload["prep"]["matterId"] == queued.matter_id
     assert payload["prep"]["mode"] == "stub"
     assert payload["prep"]["issues"]
+
+
+def test_attorney_feedback_updates_linked_playbook_accuracy(
+    attorney_client: tuple[TestClient, MatterService],
+    session_factory: sessionmaker[Session],
+) -> None:
+    client, service = attorney_client
+    playbooks = PlaybookService(session_factory)
+    playbook = playbooks.create_playbook(
+        PlaybookCreate(name="NDA baseline", contract_type="nda", jurisdiction="general")
+    )
+    playbooks.add_check(
+        playbook.id,
+        PlaybookCheckCreate(
+            key="mutuality",
+            title="Confirm NDA mutuality",
+            detection="Find whether obligations are mutual.",
+            severity="medium",
+            remediation_intent="Make obligations reciprocal unless one-way protection is justified.",
+            preferred_language="Both parties protect confidential information using reciprocal obligations.",
+            acceptable_fallback="One-way obligations are acceptable only for a clear business reason.",
+            unacceptable_fallback="Founder discloses sensitive information without reciprocal protection.",
+        ),
+    )
+    queued = _create_queued_matter(service, "org_alpha", "feedback-ready.docx")
+
+    response = client.post(
+        f"/v1/attorney/matters/{queued.matter_id}/ai-prep/feedback",
+        json={"issueIndex": 0, "action": "apply", "reasonTag": "correct_risk"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["matterId"] == queued.matter_id
+    assert payload["playbookCheckId"] is not None
+    assert payload["accuracyCorrect"] == 1
+    assert payload["accuracyTotal"] == 1
+
+    updated = playbooks.list_playbooks(contract_type="nda")[0]
+    assert updated.checks[0].accuracy_correct == 1
+    assert updated.checks[0].accuracy_total == 1
+
+
+def test_attorney_edit_feedback_updates_playbook_fallback_language(
+    attorney_client: tuple[TestClient, MatterService],
+    session_factory: sessionmaker[Session],
+) -> None:
+    client, service = attorney_client
+    playbooks = PlaybookService(session_factory)
+    playbook = playbooks.create_playbook(
+        PlaybookCreate(name="NDA edit baseline", contract_type="nda", jurisdiction="general")
+    )
+    playbooks.add_check(
+        playbook.id,
+        PlaybookCheckCreate(
+            key="return_destroy",
+            title="Check return and destruction",
+            detection="Find return or destruction obligations.",
+            severity="medium",
+            remediation_intent="Clarify what happens to confidential information at the end.",
+            preferred_language="Recipient returns or destroys confidential information on request.",
+            acceptable_fallback="Original fallback.",
+            unacceptable_fallback="No return or destruction obligation.",
+        ),
+    )
+    queued = _create_queued_matter(service, "org_alpha", "edit-feedback-ready.docx")
+
+    response = client.post(
+        f"/v1/attorney/matters/{queued.matter_id}/ai-prep/feedback",
+        json={
+            "issueIndex": 0,
+            "action": "edit",
+            "reasonTag": "fallback_too_strict",
+            "correctedDetail": "Accept deletion certificates where return is technically impractical.",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["accuracyCorrect"] == 0
+    assert payload["accuracyTotal"] == 1
+
+    updated = playbooks.list_playbooks(contract_type="nda")[0]
+    assert updated.checks[0].acceptable_fallback == "Accept deletion certificates where return is technically impractical."
 
 
 def _create_queued_matter(service: MatterService, organisation_id: str, file_name: str):

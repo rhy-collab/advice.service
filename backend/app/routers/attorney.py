@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from app.schemas.ai import AttorneyAIPrepResponse
+from app.schemas.ai import AIPrepFeedbackRequest, AIPrepFeedbackResponse, AttorneyAIPrepResponse
 from app.schemas.matters import (
     AttorneyApprovalRequest,
     AttorneyApprovalResponse,
@@ -35,6 +35,15 @@ def get_attorney_ai_prep(
     auth: AuthContext = Depends(require_attorney_context),
 ) -> AttorneyAIPrepResponse:
     return AttorneyAIPrepResponse(prep=matter_service.get_latest_ai_prep(matter_id, auth.organisation_id))
+
+
+@router.post("/matters/{matter_id}/ai-prep/feedback", response_model=AIPrepFeedbackResponse)
+def record_attorney_ai_prep_feedback(
+    matter_id: str,
+    request: AIPrepFeedbackRequest,
+    auth: AuthContext = Depends(require_attorney_context),
+) -> AIPrepFeedbackResponse:
+    return matter_service.record_ai_prep_feedback(matter_id, auth.organisation_id, request)
 
 
 @router.post("/retention/purge", response_model=RetentionReport)

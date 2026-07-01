@@ -24,11 +24,12 @@
 **Verification:** `pytest -q`.
 **Security/compliance:** Internal-only preserved. **Files:** `app/services/ai_prep_service.py`, `app/services/playbook_service.py`, `app/models/*`, migration, tests. **Depends on:** —. **Done means:** AI prep is playbook-grounded.
 
-## Issue 3 — Attorney feedback loop ⬜
+## Issue 3 — Attorney feedback loop ✅
 **Objective:** Attorney corrections permanently improve the playbook.
 **Why:** The compounding moat — every review makes the next better.
 **Scope:** When an attorney dismisses/edits an AI issue, capture a reason tag; update the relevant playbook check (fallback language / severity / detection); track per-check accuracy over time.
 **Acceptance:** A correction updates the linked check and its accuracy stat; tested.
+**Current status:** Attorney feedback is stored durably, linked playbook checks update accuracy counters, and edit feedback can replace fallback language for the check.
 **Verification:** `pytest -q`.
 **Security/compliance:** Attorney-role only. **Files:** `app/routers/attorney.py`, `app/services/playbook_service.py`, `app/services/matter_service.py`, migration, tests. **Depends on:** 2. **Done means:** corrections compound into the playbook.
 
