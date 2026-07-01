@@ -9,25 +9,25 @@
 
 ## Build Progress (live) — updated 1 July 2026
 
-**Merged to `main` (`bdf55bb`), 51 backend tests passing, CI green (backend + frontend).**
+**Merged to `main` (`9e37df6`), 61 backend tests + Playwright E2E passing, CI green.**
 
-In `main` now (foundation + Batches 02-04):
-- **Backend**: guarded matter lifecycle; org-scoped access; **attorney-only workspace** (queue + approval + AI-prep view), approval no longer in the customer API; **internal-only AI prep engine** (summary + issue list, Anthropic behind a safe stub); **playbook data model**; Stripe checkout + webhook; signed upload/download URLs; audit trail + read/report endpoints; typed config validation (fails closed); liveness + readiness probes; **notifications**, **retention/privacy**, **public-endpoint hardening** (rate-limit + size caps).
-- **Lead-gen**: free Contract Mistake Checker (stores nothing) + public intake.
-- **Frontend**: customer portal (upload -> status -> download), attorney page, admin, landing; env-guarded Sentry.
-- **Observability/deploy**: request logging, env-guarded Sentry (BE+FE), Dockerfiles + Cloud Run recipe.
-- **Packaging fixed**; CI runs backend tests + frontend build on every push/PR.
+In `main` now (foundation + Batches 02-05):
+- **The moat is taking shape**: playbook **data model + authoring UI + per-client overlay**; **playbook-driven AI prep** (internal-only); the **attorney feedback loop** (corrections update checks + track per-check accuracy); **confidence scoring + risk-score routing**; **redline + cover-letter** draft deliverables (internal); **attorney workbench v2** (review surface, Apply/Dismiss + reasoning, HuRT capture).
+- **Real Anthropic path** wired behind the key (currently sends filename + playbook metadata only, not contract text — see gate 1); safe stub fallback.
+- **Attorney-only workspace** (queue, approve, AI-prep view, feedback, retention purge) — approval is not in the customer API.
+- **Retention/privacy**: real GCS object deletion + DB rows; **public hardening**; **notifications**; **observability** (BE+FE Sentry, request logging).
+- **Lead-gen** (free checker + intake), **customer portal** (upload->status->download), Dockerfiles + deploy recipe, **E2E tests** in CI.
+- Packaging fixed; CI runs backend tests + frontend build + E2E.
 
-Invariants enforced + tested: AI never shown to customers as legal advice; delivery requires attorney-role approval; org isolation everywhere; fail-closed auth; signed-only file URLs; free checker stores nothing; AI prep is attorney-only.
+Invariants enforced + tested: AI never shown to customers as legal advice and stays attorney-only until approval; delivery requires attorney-role approval; org isolation; fail-closed auth; signed-only file URLs; free checker stores nothing.
 
 ### Gates still standing before "production ready"
-1. **The moat**: playbook-DRIVEN AI prep + the attorney feedback loop + redline/cover-letter deliverable (Batch 05).
-2. **Real Anthropic integration** wired behind the key (still internal-only).
-3. **Real accounts + actual deploy** (Cloud Run/SQL/GCS/Clerk/Stripe/Sentry secrets).
-4. **Retention completion** — delete the actual GCS objects, not just DB refs (Batch 05 #1).
-5. **The one-off security review**; **the legal foundation** (attorney engaged + structure confirmed).
+1. **AI must read the actual contract text** — today AI prep reasons from filename + playbook only; safe document-text ingestion (no-training posture, secret redaction, size caps) is the real analysis step (Batch 06 #1).
+2. **Real integrations** — Clerk (auth/roles), Stripe (products/prices), GCS, and a real redline path all still run behind stubs pending accounts/keys.
+3. **Actual deploy** — Cloud Run/SQL/GCS/Sentry provisioning + secrets.
+4. **The one-off security review**; **the legal foundation** (attorney engaged + structure confirmed with counsel).
 
-Next build step: **Batch 05** (`build-system/generated-issues/batch-05-next-nine.md`) — playbook-driven AI, feedback loop, redline + cover letter, confidence/routing, attorney workbench v2.
+Next build step: **Batch 06** (`build-system/generated-issues/batch-06-next-nine.md`) — real document analysis, real redline, ops/benchmark data, delivery channels, and launch security hardening.
 
 ---
 
