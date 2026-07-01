@@ -3,8 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from app.schemas.matters import (
     AssistantMessageRequest,
     AssistantMessageResponse,
-    AttorneyApprovalRequest,
-    AttorneyApprovalResponse,
     CheckoutResponse,
     CreateMatterRequest,
     CreateMatterResponse,
@@ -73,17 +71,6 @@ def download_matter(
     auth: AuthContext = Depends(require_auth_context),
 ) -> SignedUrlResponse:
     return SignedUrlResponse(url=matter_service.delivery_download_url(matter_id, auth.organisation_id))
-
-
-@router.post("/matters/{matter_id}/attorney-approval", response_model=AttorneyApprovalResponse)
-def approve_matter(
-    matter_id: str,
-    request: AttorneyApprovalRequest,
-    auth: AuthContext = Depends(require_attorney_context),
-) -> AttorneyApprovalResponse:
-    return AttorneyApprovalResponse(
-        matter=matter_service.approve_deliverable(matter_id, auth.organisation_id, request)
-    )
 
 
 @router.get("/matters/{matter_id}/events", response_model=MatterEventsResponse)

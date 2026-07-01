@@ -1,0 +1,189 @@
+# Batch 04 Progress Log
+
+## Issue 1 — Confirm remote CI green + branch protection
+
+**Status:** Blocked
+
+**What changed**
+- Confirmed remote GitHub Actions on `main` is green.
+- Could not enable or verify branch protection through the GitHub API because GitHub returned `HTTP 403`: private repo branch protection requires GitHub Pro or making the repository public.
+- Recorded the blocker in `BLOCKERS.md`.
+
+**Commands run**
+- `gh run list --repo Charter-Law/Charter-Law --branch main --limit 5`
+- `gh api repos/Charter-Law/Charter-Law/branches/main/protection --jq '{required_status_checks,required_pull_request_reviews}'`
+
+**Result**
+- Latest `main` CI run: `completed success`.
+- Branch protection: externally blocked by GitHub plan/settings.
+
+**Remaining work**
+- Owner enables branch protection in GitHub once the plan/settings allow it.
+
+## Issue 2 — Public-endpoint hardening
+
+**Status:** Completed
+
+**What changed**
+- Added `PublicEndpointHardeningMiddleware` for unauthenticated `/v1/public/*` routes.
+- Added per-IP fixed-window rate limiting with `PUBLIC_RATE_LIMIT_PER_MINUTE`.
+- Added edge `Content-Length` rejection for oversized checker uploads with `PUBLIC_UPLOAD_BODY_LIMIT_BYTES`.
+- Changed the checker endpoint to stream uploads in chunks and stop above `MAX_CHECK_BYTES`.
+- Tightened public intake validation with `EmailStr` and whitespace stripping.
+- Kept the free checker non-persistent: it still returns `stored=false` and does not create DB/GCS records.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+
+**Result**
+- `37 passed, 3 warnings`.
+
+**Remaining work**
+- None for this issue.
+
+## Issue 3 — Attorney workspace v1
+
+**Status:** Completed
+
+**What changed**
+- Added a dedicated attorney backend router under `/v1/attorney`.
+- Added `GET /v1/attorney/queue` for attorney/admin users to see `attorney_queue` and `attorney_review` matters in their organisation.
+- Added `POST /v1/attorney/matters/{matter_id}/approve` for attorney/admin delivery approval.
+- Removed approval from the customer matter router surface.
+- Tightened approval so a matter must have upload complete, payment paid, and be in `attorney_queue` or `attorney_review`.
+- Added `/attorney` frontend routing and pointed the internal queue UI to the attorney API routes.
+- Updated the API contract and navigation label.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `cd frontend && npm run build`
+- Browser verification at `http://127.0.0.1:5173/attorney`
+
+**Result**
+- Backend: `42 passed, 3 warnings`.
+- Frontend build passed.
+- Browser check showed the attorney delivery queue, `/attorney` nav link, one demo queue row, and no console errors.
+
+**Remaining work**
+- Later batch should build the full cross-organisation attorney workbench model; this first slice scopes attorneys to their active Clerk organisation.
+
+## Issue 4 — Customer portal completion
+
+**Status:** Completed
+
+**What changed**
+- Converted the dashboard `Upload .docx` action into a real jump link to the upload panel.
+- Added the missing `Attorney Queue` stage so the customer status tracker reflects the backend lifecycle: Received → AI Review → Attorney Queue → Attorney Review → Delivered.
+- Confirmed portal upload code still creates a matter, uses signed/demo upload targets, marks upload complete, creates checkout, and disables download until `deliverableAvailable`.
+
+**Commands run**
+- `cd frontend && npm run build`
+- Browser verification at `http://127.0.0.1:5173/portal`
+
+**Result**
+- Frontend build passed.
+- Browser check confirmed the portal renders, has the upload panel, shows the 5-stage tracker, and keeps pending deliverables disabled.
+
+**Remaining work**
+- Real end-to-end upload/payment smoke test requires live Clerk/Stripe/GCS credentials or a fuller mocked browser fixture.
+
+## Issue 5 — AI prep engine v1 (internal-only)
+
+**Status:** Completed
+
+**What changed**
+- Added `matter_ai_preps` persistence and migration.
+- Added an internal AI prep service with deterministic stub fallback when `ANTHROPIC_API_KEY` is unset.
+- Upload completion now creates an internal summary + issue list, records AI prep events, and moves the matter to `attorney_queue`.
+- Added attorney-only `GET /v1/attorney/matters/{matter_id}/ai-prep`.
+- Confirmed customer matter detail responses do not expose prep data.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+
+**Result**
+- Backend tests pass with the stub.
+
+**Remaining work**
+- Real Anthropic document ingestion needs live document retrieval from GCS plus a reviewed Anthropic prompt/client path. The current interface isolates that future integration behind `AIPrepService`.
+
+## Issue 6 — Playbook data model v1
+
+**Status:** Completed
+
+**What changed**
+- Added `playbooks` and `playbook_checks` models and Alembic migration.
+- Added structured playbook schemas for detection, severity, remediation intent, preferred language, acceptable fallback, unacceptable fallback, and accuracy counters.
+- Added `PlaybookService` with create, list/filter, get, add-check, and idempotent NDA seed.
+- Added tests for CRUD, filtering, missing rows, and the seed.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+
+**Result**
+- Backend tests pass.
+
+**Remaining work**
+- Wire the AI prep engine to consume these checks in a later issue.
+
+## Issue 7 — Status-change notifications
+
+**Status:** Completed
+
+**What changed**
+- Added `NotificationService` with an email/log channel boundary.
+- Added a safe log fallback when `RESEND_API_KEY` is unset.
+- Triggered a notification when a matter is delivered by attorney approval or delivered status transition.
+- Kept notification subject/body free of document contents and filenames.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+
+**Result**
+- Backend tests pass.
+
+**Remaining work**
+- Wire a real email provider once the account and verified sender/domain exist.
+
+## Issue 8 — Observability completion
+
+**Status:** Completed
+
+**What changed**
+- Added request ID middleware with `x-request-id` response headers.
+- Added structured JSON request logs with method/path/status/duration only.
+- Added tests proving the request ID and log shape, with no body/content logging.
+- Added frontend Sentry initialization guarded by `VITE_SENTRY_DSN`.
+- Added `@sentry/react`.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `cd frontend && npm run build`
+
+**Result**
+- Backend and frontend verification passed.
+
+**Remaining work**
+- Add real Sentry DSNs in deployment environment once the project exists.
+
+## Issue 9 — Data retention & privacy
+
+**Status:** Completed
+
+**What changed**
+- Added `RetentionService`.
+- Added env-configured retention windows for public intakes and matter file references.
+- Added purge logic for expired public intake PII.
+- Added purge logic for old delivered/completed matter file references.
+- Updated security/API docs with privacy and retention notes.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `cd frontend && npm run build`
+- `git diff --check`
+
+**Result**
+- Backend and frontend verification passed.
+
+**Remaining work**
+- Wire live GCS object deletion once production credentials and bucket policy exist.

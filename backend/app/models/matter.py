@@ -31,6 +31,11 @@ class MatterModel(Base):
         cascade="all, delete-orphan",
         order_by="MatterFileModel.created_at",
     )
+    ai_preps: Mapped[list["MatterAIPrepModel"]] = relationship(
+        back_populates="matter",
+        cascade="all, delete-orphan",
+        order_by="MatterAIPrepModel.created_at",
+    )
 
 
 class MatterEventModel(Base):
@@ -59,3 +64,16 @@ class MatterFileModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     matter: Mapped[MatterModel] = relationship(back_populates="files")
+
+
+class MatterAIPrepModel(Base):
+    __tablename__ = "matter_ai_preps"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    matter_id: Mapped[str] = mapped_column(ForeignKey("matters.id", ondelete="CASCADE"), index=True)
+    mode: Mapped[str] = mapped_column(String(64))
+    summary: Mapped[str] = mapped_column(Text)
+    issues_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    matter: Mapped[MatterModel] = relationship(back_populates="ai_preps")

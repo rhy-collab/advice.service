@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 FindingSeverity = Literal["info", "warning"]
 FindingType = Literal[
@@ -38,10 +38,10 @@ PublicIntakeUrgency = Literal["standard", "rush", "not_sure"]
 
 
 class PublicIntakeRequest(BaseModel):
-    model_config = ConfigDict(populate_by_name=True)
+    model_config = ConfigDict(populate_by_name=True, str_strip_whitespace=True)
 
     name: str = Field(min_length=2, max_length=256)
-    email: str = Field(min_length=5, max_length=320)
+    email: EmailStr = Field(max_length=320)
     company: str = Field(min_length=2, max_length=256)
     contract_type: str = Field(validation_alias="contractType", min_length=2, max_length=128)
     urgency: PublicIntakeUrgency

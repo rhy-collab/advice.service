@@ -12,7 +12,7 @@ Authorization: Bearer <clerk_jwt>
 
 The FastAPI backend must verify that token on every request. It must derive the user and organisation from Clerk, then scope every query by `organisation_id`. The frontend must never send an organisation id as a trust source for access control.
 
-Local development can run with `CLERK_DEMO_AUTH=true`, which allows unauthenticated demo requests while the Clerk project is not configured. Production must set `CLERK_DEMO_AUTH=false` and configure `CLERK_JWKS_URL` plus `CLERK_JWT_ISSUER`.
+Local development can run with `CLERK_DEMO_AUTH=true`, which allows unauthenticated demo requests while the Clerk project is not configured. Production must set `CLERK_DEMO_AUTH=false` and configure `CLERK_JWKS_URL`, `CLERK_JWT_ISSUER`, and `CLERK_JWT_AUDIENCE`.
 
 The current local backend persists matters/events through SQLAlchemy. Local development defaults to SQLite through `DATABASE_URL=sqlite:///./charter_law_dev.db`; production should use PostgreSQL/Cloud SQL. Schema is versioned through Alembic under `backend/alembic/`.
 
@@ -52,7 +52,7 @@ Response:
 }
 ```
 
-Privacy invariant: `stored` must remain `false`; the checker must not create matter rows, intake rows, GCS objects, or logs containing contract text.
+Privacy invariant: `stored` must remain `false`; the checker must not create matter rows, intake rows, GCS objects, or logs containing contract text. Public intake PII is subject to the backend retention window in `PUBLIC_INTAKE_RETENTION_DAYS`.
 
 ### `POST /v1/public/intake`
 
@@ -222,9 +222,21 @@ Returns matter details, timeline events, current status, assistant-safe context,
 
 Returns a short-lived signed download URL for the approved deliverable. Only available after `delivered`.
 
-### `POST /v1/matters/{matter_id}/attorney-approval`
+## Attorney Routes
 
-Internal attorney/admin stand-in for approving the final client deliverable. It requires the source upload to be complete and payment to be `paid`, records an `approved_redline` file, marks the matter `delivered`, and enables customer download.
+These routes power `/attorney`. They require an attorney/admin role claim server-side through `require_attorney_context`.
+
+### `GET /v1/attorney/queue`
+
+Returns matters in `attorney_queue` or `attorney_review` for the active organisation.
+
+### `GET /v1/attorney/matters/{matter_id}/ai-prep`
+
+Returns the latest internal-only AI preparation summary and issue list for an attorney/admin. This is never returned by customer matter routes.
+
+### `POST /v1/attorney/matters/{matter_id}/approve`
+
+Approves the final client deliverable. It requires attorney/admin auth, source upload complete, payment `paid`, and a matter status of `attorney_queue` or `attorney_review`. It records an `approved_redline` file, marks the matter `delivered`, and enables customer download.
 
 Request:
 

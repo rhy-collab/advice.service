@@ -147,9 +147,9 @@ function PortalDashboard({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
           <span>Acme Labs</span>
           <h2>Matters dashboard</h2>
         </div>
-        <button className="upload-button" type="button">
+        <a className="upload-button" href="#upload-contract">
           <UploadCloud size={17} /> Upload .docx
-        </button>
+        </a>
       </div>
 
       <p className={`api-source api-source-${apiSource}`}>
@@ -269,7 +269,7 @@ function UploadPanel({
   }
 
   return (
-    <section className={`upload-panel upload-panel-${uploadState}`} aria-label="Upload contract">
+    <section className={`upload-panel upload-panel-${uploadState}`} id="upload-contract" aria-label="Upload contract">
       <div className="upload-panel-copy">
         <span className="upload-icon">
           {uploadState === "complete" ? <FileCheck2 size={20} /> : <UploadCloud size={20} />}

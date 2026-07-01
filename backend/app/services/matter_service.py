@@ -7,7 +7,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.session import SessionLocal
-from app.models.matter import MatterEventModel, MatterFileModel, MatterModel
+from app.models.matter import MatterAIPrepModel, MatterEventModel, MatterFileModel, MatterModel
+from app.schemas.ai import AIPrepResult
 from app.schemas.matters import (
     AttorneyApprovalRequest,
     CreateMatterRequest,
@@ -20,6 +21,8 @@ from app.schemas.matters import (
     UploadTarget,
     demo_expiry,
 )
+from app.services.ai_prep_service import ai_prep_service, issues_from_json, issues_to_json
+from app.services.notifications import NotificationService, notification_service
 from app.services.storage_service import StorageService, storage_service
 
 
@@ -38,10 +41,12 @@ class MatterService:
         self,
         session_factory: Callable[[], Session] | sessionmaker[Session] = SessionLocal,
         storage: StorageService = storage_service,
+        notifications: NotificationService = notification_service,
         seed_demo: bool = False,
     ) -> None:
         self._session_factory = session_factory
         self._storage = storage
+        self._notifications = notifications
         if seed_demo:
             self.seed_demo_data()
 
@@ -51,6 +56,18 @@ class MatterService:
                 select(MatterModel)
                 .where(MatterModel.organisation_id == organisation_id)
                 .order_by(MatterModel.submitted_at.desc())
+            ).all()
+            return [matter_to_summary(row) for row in rows]
+
+    def list_attorney_queue(self, organisation_id: str) -> list[MatterSummary]:
+        with self._session_factory() as db:
+            rows = db.scalars(
+                select(MatterModel)
+                .where(
+                    MatterModel.organisation_id == organisation_id,
+                    MatterModel.status.in_(("attorney_queue", "attorney_review")),
+                )
+                .order_by(MatterModel.submitted_at.asc())
             ).all()
             return [matter_to_summary(row) for row in rows]
 
@@ -135,6 +152,35 @@ class MatterService:
                     note="Source contract upload was marked complete.",
                 )
             )
+            if matter.status == "intake" and not matter.ai_preps:
+                matter.status = "ai_review"
+                matter.events.append(
+                    MatterEventModel(
+                        type="ai_prep_started",
+                        actor="system",
+                        occurred_at=datetime.now(timezone.utc),
+                        note="Internal AI preparation started after upload.",
+                    )
+                )
+                prep = ai_prep_service.generate_for_uploaded_contract(matter.file_name, matter.service_tier)
+                matter.ai_preps.append(
+                    MatterAIPrepModel(
+                        mode=prep.mode,
+                        summary=prep.summary,
+                        issues_json=issues_to_json(prep.issues),
+                        created_at=datetime.now(timezone.utc),
+                    )
+                )
+                matter.status = "attorney_queue"
+                matter.next_update_eta_minutes = 45
+                matter.events.append(
+                    MatterEventModel(
+                        type="ai_prep_completed",
+                        actor="system",
+                        occurred_at=datetime.now(timezone.utc),
+                        note="Internal AI preparation completed and matter moved to attorney queue.",
+                    )
+                )
             db.commit()
             db.refresh(matter)
             return matter_to_summary(matter)
@@ -204,6 +250,8 @@ class MatterService:
                 raise HTTPException(status_code=409, detail="Source contract upload is required before delivery")
             if matter.payment_status != "paid":
                 raise HTTPException(status_code=409, detail="Payment is required before delivery")
+            if matter.status not in {"attorney_queue", "attorney_review"}:
+                raise HTTPException(status_code=409, detail="Matter must be in attorney review before delivery")
 
             now = datetime.now(timezone.utc)
             matter.status = "delivered"
@@ -229,6 +277,7 @@ class MatterService:
             )
             db.commit()
             db.refresh(matter)
+            self._notifications.notify_status_change(matter.id, organisation_id, "delivered")
             return matter_to_summary(matter)
 
     def delivery_download_url(self, matter_id: str, organisation_id: str) -> str:
@@ -277,6 +326,8 @@ class MatterService:
             )
             db.commit()
             db.refresh(matter)
+            if status == "delivered":
+                self._notifications.notify_status_change(matter.id, organisation_id, "delivered")
             return matter_to_summary(matter)
 
     def seed_demo_data(self) -> None:
@@ -322,6 +373,26 @@ class MatterService:
         if detail is None:
             raise HTTPException(status_code=404, detail="Matter not found")
         return detail.events
+
+    def get_latest_ai_prep(self, matter_id: str, organisation_id: str) -> AIPrepResult:
+        with self._session_factory() as db:
+            matter = self._get_matter_model(db, matter_id, organisation_id)
+            if matter is None:
+                raise HTTPException(status_code=404, detail="Matter not found")
+            prep = db.scalar(
+                select(MatterAIPrepModel)
+                .where(MatterAIPrepModel.matter_id == matter_id)
+                .order_by(MatterAIPrepModel.created_at.desc(), MatterAIPrepModel.id.desc())
+            )
+            if prep is None:
+                raise HTTPException(status_code=404, detail="Internal AI preparation not found")
+            return AIPrepResult(
+                matter_id=matter_id,
+                mode=prep.mode,  # type: ignore[arg-type]
+                summary=prep.summary,
+                issues=issues_from_json(prep.issues_json),
+                created_at=prep.created_at,
+            )
 
     def activity_report(self, organisation_id: str) -> dict:
         with self._session_factory() as db:

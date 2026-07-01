@@ -13,8 +13,11 @@ Enforced in code and covered by tests:
   URL path exists for real files; file bytes never stored in the DB.
 - **Auditability.** Every action writes a `matter_events` row; readable via the audit endpoint.
 - **Payments.** Stripe hosted checkout only; webhook signatures verified.
+- **Retention controls.** Public intake PII and old delivered/completed matter file references have
+  an env-configured purge path (`RetentionService`). The free checker still stores nothing.
 
 Still required before real client contracts (human/external):
 - The one-off freelance security review.
 - Real Clerk/GCS/Stripe/Sentry accounts + Secret Manager.
-- Encryption-at-rest confirmation on Cloud SQL + GCS; retention/deletion policy.
+- Encryption-at-rest confirmation on Cloud SQL + GCS, plus live GCS object deletion wiring for
+  retention jobs once production credentials exist.

@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.models.matter import MatterFileModel
+from app.models.matter import MatterAIPrepModel, MatterFileModel
 from app.services.matter_service import MatterService
 
 
@@ -101,8 +101,10 @@ def test_upload_complete_updates_matter_and_timeline(matter_service: MatterServi
     detail = matter_service.get_matter(created.matter_id, "org_demo")
 
     assert matter.upload_status == "uploaded"
+    assert matter.status == "attorney_queue"
     assert detail is not None
     assert any(event.type == "upload_completed" for event in detail.events)
+    assert any(event.type == "ai_prep_completed" for event in detail.events)
 
 
 def test_checkout_and_payment_updates_matter_state(matter_service: MatterService) -> None:
@@ -167,6 +169,7 @@ def test_attorney_approval_records_deliverable_and_enables_download(
     )
     matter_service.mark_upload_complete(created.matter_id, "org_demo")
     matter_service.mark_payment_status(created.matter_id, "paid")
+    notifications_before = len(matter_service._notifications.sent_notifications)
 
     delivered = matter_service.approve_deliverable(
         created.matter_id,
@@ -182,6 +185,12 @@ def test_attorney_approval_records_deliverable_and_enables_download(
     assert download_url.endswith(f"/matters/{created.matter_id}/deliverables/ready-contract-redline.docx")
     assert detail is not None
     assert any(event.type == "attorney_approved" for event in detail.events)
+    notification = matter_service._notifications.sent_notifications[-1]
+    assert len(matter_service._notifications.sent_notifications) == notifications_before + 1
+    assert notification.status == "delivered"
+    assert notification.channel == "log"
+    assert "ready-contract" not in notification.subject
+    assert "ready-contract" not in notification.body
 
     with session_factory() as db:
         deliverable = db.scalar(
@@ -195,6 +204,55 @@ def test_attorney_approval_records_deliverable_and_enables_download(
     assert deliverable.file_name == "ready-contract-redline.docx"
     assert deliverable.storage_bucket == "test-bucket"
     assert deliverable.storage_object == f"matters/{created.matter_id}/deliverables/ready-contract-redline.docx"
+
+
+def test_upload_completion_creates_internal_ai_prep(
+    matter_service: MatterService,
+    session_factory: sessionmaker[Session],
+) -> None:
+    from app.schemas.matters import CreateMatterRequest
+
+    created = matter_service.create_matter(
+        CreateMatterRequest(
+            fileName="prep-contract.docx",
+            serviceTier="standard_redline",
+            contractType="vendor_saas",
+        ),
+        "org_demo",
+    )
+
+    matter = matter_service.mark_upload_complete(created.matter_id, "org_demo")
+    prep = matter_service.get_latest_ai_prep(created.matter_id, "org_demo")
+    customer_detail = matter_service.get_matter(created.matter_id, "org_demo")
+
+    assert matter.status == "attorney_queue"
+    assert prep.mode == "stub"
+    assert "Internal preparation summary" in prep.summary
+    assert prep.issues
+    assert customer_detail is not None
+    assert "prep" not in customer_detail.model_dump(by_alias=True)
+
+    with session_factory() as db:
+        prep_rows = db.scalars(
+            select(MatterAIPrepModel).where(MatterAIPrepModel.matter_id == created.matter_id)
+        ).all()
+
+    assert len(prep_rows) == 1
+
+
+def test_ai_prep_is_org_scoped(matter_service: MatterService) -> None:
+    from app.schemas.matters import CreateMatterRequest
+
+    created = matter_service.create_matter(
+        CreateMatterRequest(fileName="scoped-prep.docx", serviceTier="standard_redline", contractType="vendor_saas"),
+        "org_demo",
+    )
+    matter_service.mark_upload_complete(created.matter_id, "org_demo")
+
+    with pytest.raises(HTTPException) as exc_info:
+        matter_service.get_latest_ai_prep(created.matter_id, "org_other")
+
+    assert exc_info.value.status_code == 404
 
 
 def test_download_rejected_before_attorney_approval(matter_service: MatterService) -> None:

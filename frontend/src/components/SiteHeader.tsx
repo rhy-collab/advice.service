@@ -13,7 +13,7 @@ export function SiteHeader() {
         <a href="/#pricing">Pricing</a>
         <a href="/#workflow">How it works</a>
         <a href="/portal">Portal</a>
-        <a href="/admin">Review</a>
+        <a href="/attorney">Attorney</a>
       </nav>
       <a className="header-action" href="/#intake">
         Send a contract
