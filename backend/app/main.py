@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 from app.config import load_settings, validate_settings
 from app.db.session import SessionLocal, run_migrations
+from app.middleware.public_hardening import PublicEndpointHardeningMiddleware
 from app.observability import init_sentry
 from app.routers import matters, public, reports, users
 from app.services.matter_service import matter_service
@@ -19,6 +20,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(PublicEndpointHardeningMiddleware)
 
 
 def database_ready(session_factory=SessionLocal) -> bool:
@@ -34,7 +36,7 @@ def database_ready(session_factory=SessionLocal) -> bool:
 def startup() -> None:
     validate_settings(load_settings())
     init_sentry()
-    if os.getenv("RUN_MIGRATIONS_ON_STARTUP", "true").lower() == "true":
+    if os.getenv("RUN_MIGRATIONS_ON_STARTUP", "false").lower() == "true":
         run_migrations()
     if os.getenv("SEED_DEMO_DATA", "false").lower() == "true":
         matter_service.seed_demo_data()

@@ -6,15 +6,16 @@
 
 ---
 
-## Issue 1 — Confirm remote CI green + branch protection ⛔/🟨
+## Issue 1 — Confirm remote CI green + branch protection ⛔
 **Objective:** Prove GitHub Actions is green on `main` and make it a required check before merge.
 **Why:** Trust in the green baseline must be remote, not just local.
 **Scope:** Verify the Actions run on `main`; enable branch protection requiring the CI check + 1 review.
 **Acceptance:** CI green on `main`; protection rule active.
+**Current status:** CI on `main` is green; branch-protection API/settings are blocked by GitHub plan/owner settings (`HTTP 403`: private repo requires Pro/public for branch protection API).
 **Verification:** GitHub Actions tab; repo settings.
 **Security/compliance:** none. **Files:** none (settings). **Depends on:** —. **Done means:** merges are gated on green CI. *(Branch-protection toggle is a human/GitHub-settings step.)*
 
-## Issue 2 — Public-endpoint hardening ⬜
+## Issue 2 — Public-endpoint hardening ✅
 **Objective:** Protect `/v1/public/check-contract` and `/v1/public/intake` from abuse.
 **Why:** They're unauthenticated; today there's no rate-limit and the checker reads the whole upload before the size check.
 **Scope:** Per-IP rate limiting; enforce a max request/body size at the edge (reject before full read); basic input validation on intake; keep the "no storage" guarantee.
