@@ -1,13 +1,16 @@
 from fastapi import APIRouter, Depends
 
-from app.schemas.ai import AttorneyAIPrepResponse
+from app.schemas.ai import AIPrepFeedbackRequest, AIPrepFeedbackResponse, AttorneyAIPrepResponse
 from app.schemas.matters import (
     AttorneyApprovalRequest,
     AttorneyApprovalResponse,
     AttorneyQueueResponse,
+    AttorneyReviewMinutesRequest,
+    AttorneyReviewMinutesResponse,
 )
 from app.services.auth import AuthContext, require_attorney_context
 from app.services.matter_service import matter_service
+from app.services.retention import RetentionReport, retention_service
 
 router = APIRouter(prefix="/attorney", tags=["attorney"])
 
@@ -28,9 +31,34 @@ def approve_attorney_matter(
     )
 
 
+@router.post("/matters/{matter_id}/review-minutes", response_model=AttorneyReviewMinutesResponse)
+def record_attorney_review_minutes(
+    matter_id: str,
+    request: AttorneyReviewMinutesRequest,
+    auth: AuthContext = Depends(require_attorney_context),
+) -> AttorneyReviewMinutesResponse:
+    return AttorneyReviewMinutesResponse(
+        matter=matter_service.record_attorney_review_minutes(matter_id, auth.organisation_id, request)
+    )
+
+
 @router.get("/matters/{matter_id}/ai-prep", response_model=AttorneyAIPrepResponse)
 def get_attorney_ai_prep(
     matter_id: str,
     auth: AuthContext = Depends(require_attorney_context),
 ) -> AttorneyAIPrepResponse:
     return AttorneyAIPrepResponse(prep=matter_service.get_latest_ai_prep(matter_id, auth.organisation_id))
+
+
+@router.post("/matters/{matter_id}/ai-prep/feedback", response_model=AIPrepFeedbackResponse)
+def record_attorney_ai_prep_feedback(
+    matter_id: str,
+    request: AIPrepFeedbackRequest,
+    auth: AuthContext = Depends(require_attorney_context),
+) -> AIPrepFeedbackResponse:
+    return matter_service.record_ai_prep_feedback(matter_id, auth.organisation_id, request)
+
+
+@router.post("/retention/purge", response_model=RetentionReport)
+def purge_expired_data(auth: AuthContext = Depends(require_attorney_context)) -> RetentionReport:
+    return retention_service.purge_expired()

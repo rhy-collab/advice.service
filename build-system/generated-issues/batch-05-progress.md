@@ -1,0 +1,222 @@
+# Batch 05 Progress Log
+
+## Issue 1 — Retention: delete the actual storage objects
+
+**Status:** Completed
+
+**What changed**
+- Added `StorageService.delete_object(bucket, object_name)`.
+- Retention now calls storage deletion before removing expired delivered/completed matter file rows.
+- Retention reports `storage_objects_deleted`.
+- Added attorney/admin trigger endpoint: `POST /v1/attorney/retention/purge`.
+- Added tests with a fake storage service proving object deletion is called before rows disappear.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 52 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Wire this endpoint to Cloud Scheduler or equivalent once production deployment exists.
+
+## Issue 2 — Playbook-driven AI prep
+
+**Status:** Completed
+
+**What changed**
+- Persisted `contract_type` on matters, including an Alembic migration for existing databases.
+- AI prep now resolves the matching playbook for the matter's contract type during upload completion.
+- Generated AI prep issues can reference `playbook_check_id` and `playbook_check_key`.
+- The deterministic fallback still works when no matching playbook exists.
+- Added tests for contract-type persistence and playbook-grounded AI prep output.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 53 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Later Anthropic integration should use the same playbook-check context instead of inventing a separate prompt shape.
+
+## Issue 3 — Attorney feedback loop
+
+**Status:** Completed
+
+**What changed**
+- Added durable `matter_ai_feedback` storage for attorney AI-prep corrections.
+- Added attorney endpoint: `POST /v1/attorney/matters/{matter_id}/ai-prep/feedback`.
+- Feedback records the action, reason tag, corrected detail, issue title, and linked playbook check id when present.
+- Linked playbook checks now update accuracy counters from attorney feedback.
+- Edit feedback can update the check's acceptable fallback language.
+- Added attorney-route tests for apply and edit feedback paths.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 55 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- The frontend workbench in Issue 7 should call this endpoint from Apply/Dismiss/Edit controls.
+
+## Issue 4 — Over-inclusive redline + cover-letter deliverable
+
+**Status:** Completed
+
+**What changed**
+- Added `matter_draft_deliverables` storage for internal work product.
+- Added a deliverable-generation service that creates internal redline and cover-letter object paths.
+- Cover-letter body is generated from the AI-prep issue list and keeps the output attorney-only.
+- Upload completion now creates the internal draft deliverable after AI prep.
+- Added tests proving draft creation and preserving the pre-approval customer download block.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 56 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Replace the redline stub boundary with a real Word add-in or document-generation worker when that infrastructure exists.
+
+## Issue 5 — Confidence scoring + risk-score routing
+
+**Status:** Completed
+
+**What changed**
+- Added `RiskService` to score AI-prep issues from severity plus confidence.
+- Added `risk_score` and `risk_route` to matters and matter summaries.
+- Upload completion now stores the risk score and route after AI prep.
+- Attorney AI-prep responses continue to expose per-issue confidence.
+- Added tests for default escalation, playbook-scored routing, and attorney confidence visibility.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 56 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Issue 7 should visually prioritize weak-confidence and escalated matters in the attorney workbench.
+
+## Issue 6 — Real Anthropic integration
+
+**Status:** Completed
+
+**What changed**
+- Added an Anthropic Messages API client behind `ANTHROPIC_API_KEY`.
+- Added `ANTHROPIC_MODEL` and `ANTHROPIC_VERSION` configuration.
+- AI prep now uses the Anthropic path when keyed and keeps the deterministic stub fallback when unset.
+- Parsed Anthropic JSON output into the existing internal AI-prep schema.
+- Added a safe fallback if Anthropic returns malformed JSON.
+- Documented the production key/no-document-logging setup in `BLOCKERS.md`.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 58 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Add the live production secret outside git before expecting real AI output in deployment.
+
+## Issue 7 — Attorney workbench v2
+
+**Status:** Completed
+
+**What changed**
+- Added attorney review-minutes storage and an attorney-only minutes endpoint.
+- Added a dedicated `/attorney` workbench page instead of reusing the delivery queue page.
+- The workbench shows queued matters, risk route, risk score, AI-prep summary, issue confidence, and playbook keys.
+- Attorneys can Apply, Dismiss, or Edit AI issues from the UI, feeding the Issue 3 feedback endpoint.
+- Attorneys can record review minutes and approve delivery from the same surface.
+- Added frontend API helpers for AI prep, feedback, and review minutes.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 59 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Browser dogfood should be run on the workbench before launch polish, especially at mobile widths.
+
+## Issue 8 — Playbook authoring UI + per-client overlay
+
+**Status:** Completed
+
+**What changed**
+- Added optional `organisation_id` overlays to playbooks.
+- Playbook resolution now prefers the client overlay over the base playbook at review time.
+- Added attorney-only playbook list/create, check-create, and check-edit API routes.
+- Added tests for overlay resolution and attorney playbook authoring routes.
+- Added a playbook authoring panel to the attorney workbench with overlay, add-check, and strengthen-check actions.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 61 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Replace the demo preset playbook form actions with full field-by-field editing controls when attorneys start entering real playbook language.
+
+## Issue 9 — End-to-end tests + CI required checks
+
+**Status:** Completed with external settings blocker
+
+**What changed**
+- Added Playwright to the frontend.
+- Added E2E coverage for client portal demo upload/status/delivery-pending flow.
+- Added E2E coverage for attorney workbench issue action, review-minutes capture, and approval flow.
+- Added a CI `frontend-e2e` job that installs Chromium and runs `npm run e2e`.
+- Preserved the known branch-protection blocker in `BLOCKERS.md`.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `npm run e2e`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 61 passed, 3 existing warnings.
+- Frontend production build passed.
+- Playwright E2E passed: 2 passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Repository owner must enable required checks/branch protection after the GitHub plan or visibility blocker is resolved.

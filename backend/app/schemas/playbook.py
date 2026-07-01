@@ -17,10 +17,23 @@ class PlaybookCheckCreate(BaseModel):
     unacceptable_fallback: str = Field(min_length=2)
 
 
+class PlaybookCheckUpdate(BaseModel):
+    title: str | None = Field(default=None, min_length=2, max_length=256)
+    detection: str | None = Field(default=None, min_length=2)
+    severity: PlaybookSeverity | None = None
+    remediation_intent: str | None = Field(default=None, min_length=2)
+    preferred_language: str | None = Field(default=None, min_length=2)
+    acceptable_fallback: str | None = Field(default=None, min_length=2)
+    unacceptable_fallback: str | None = Field(default=None, min_length=2)
+
+
 class PlaybookCreate(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
     name: str = Field(min_length=2, max_length=256)
     contract_type: str = Field(min_length=2, max_length=128)
     jurisdiction: str = Field(default="general", min_length=2, max_length=128)
+    organisation_id: str | None = Field(default=None, validation_alias="organisationId")
 
 
 class PlaybookCheck(BaseModel):
@@ -47,5 +60,10 @@ class Playbook(BaseModel):
     name: str
     contract_type: str = Field(serialization_alias="contractType")
     jurisdiction: str
+    organisation_id: str | None = Field(default=None, serialization_alias="organisationId")
     created_at: datetime = Field(serialization_alias="createdAt")
     checks: list[PlaybookCheck] = []
+
+
+class PlaybookListResponse(BaseModel):
+    playbooks: list[Playbook]

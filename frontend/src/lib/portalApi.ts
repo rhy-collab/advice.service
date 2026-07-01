@@ -12,6 +12,9 @@ type ApiMatter = {
   submittedAt: string;
   nextUpdateEtaMinutes: number | null;
   deliverableAvailable: boolean;
+  riskScore: number;
+  riskRoute: "fast_track" | "standard_review" | "escalate";
+  attorneyReviewMinutes: number | null;
 };
 
 type MatterListResponse = {
@@ -50,6 +53,72 @@ type DownloadResponse = {
 
 type AttorneyApprovalResponse = {
   matter: ApiMatter;
+};
+
+export type AIPrepIssue = {
+  title: string;
+  severity: "low" | "medium" | "high" | "critical";
+  detail: string;
+  confidence: "weak" | "medium" | "strong";
+  playbookCheckId: string | null;
+  playbookCheckKey: string | null;
+};
+
+export type AIPrepResult = {
+  matterId: string;
+  mode: "stub" | "anthropic";
+  summary: string;
+  issues: AIPrepIssue[];
+  createdAt: string;
+};
+
+type AttorneyAIPrepResponse = {
+  prep: AIPrepResult;
+};
+
+type AIPrepFeedbackAction = "apply" | "dismiss" | "edit";
+
+type AIPrepFeedbackResponse = {
+  matterId: string;
+  issueTitle: string;
+  action: AIPrepFeedbackAction;
+  reasonTag: string;
+  playbookCheckId: string | null;
+  accuracyCorrect: number | null;
+  accuracyTotal: number | null;
+};
+
+type AttorneyReviewMinutesResponse = {
+  matter: ApiMatter;
+};
+
+export type PlaybookCheck = {
+  id: string;
+  key: string;
+  title: string;
+  detection: string;
+  severity: "low" | "medium" | "high" | "critical";
+  remediationIntent: string;
+  preferredLanguage: string;
+  acceptableFallback: string;
+  unacceptableFallback: string;
+  accuracyCorrect: number;
+  accuracyTotal: number;
+  createdAt: string;
+};
+
+export type Playbook = {
+  id: string;
+  name: string;
+  contractType: string;
+  jurisdiction: string;
+  organisationId: string | null;
+  createdAt: string;
+  checks: PlaybookCheck[];
+};
+
+type PlaybookListResponse = {
+  playbooks: Playbook[];
 };
 
 export async function fetchPortalMatters(
@@ -154,6 +223,9 @@ export async function createPortalMatter(
         eta: "15 minutes",
         activeStage: 0,
         deliverableAvailable: false,
+        riskScore: 0,
+        riskRoute: "standard_review",
+        attorneyReviewMinutes: null,
       },
       source: "demo",
       checkout: {
@@ -222,7 +294,192 @@ function mapApiMatter(matter: ApiMatter, submittedOverride?: string): Matter {
     eta: matter.nextUpdateEtaMinutes === null ? "Complete" : `${matter.nextUpdateEtaMinutes} minutes`,
     activeStage: mapActiveStage(matter.status),
     deliverableAvailable: matter.deliverableAvailable,
+    riskScore: matter.riskScore ?? 0,
+    riskRoute: matter.riskRoute ?? "standard_review",
+    attorneyReviewMinutes: matter.attorneyReviewMinutes ?? null,
   };
+}
+
+export async function fetchAttorneyAIPrep(
+  matter: Matter,
+  getAuthToken?: GetAuthToken,
+): Promise<{ prep: AIPrepResult; source: PortalApiState }> {
+  if (matter.id.startsWith("matter_demo_") || matter.id.startsWith("matter_local_")) {
+    return { prep: demoAIPrep(matter), source: "demo" };
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/attorney/matters/${matter.id}/ai-prep`, {
+      headers: await authHeaders(getAuthToken),
+    });
+    if (!response.ok) {
+      throw new Error(`AI prep failed: ${response.status}`);
+    }
+    const payload = (await response.json()) as AttorneyAIPrepResponse;
+    return { prep: payload.prep, source: "api" };
+  } catch {
+    return { prep: demoAIPrep(matter), source: "demo" };
+  }
+}
+
+export async function submitAttorneyAIPrepFeedback(
+  matter: Matter,
+  issueIndex: number,
+  action: AIPrepFeedbackAction,
+  getAuthToken?: GetAuthToken,
+): Promise<{ feedback: AIPrepFeedbackResponse; source: PortalApiState }> {
+  if (matter.id.startsWith("matter_demo_") || matter.id.startsWith("matter_local_")) {
+    return {
+      feedback: {
+        matterId: matter.id,
+        issueTitle: "Demo issue",
+        action,
+        reasonTag: `${action}_from_workbench`,
+        playbookCheckId: null,
+        accuracyCorrect: action === "apply" ? 1 : 0,
+        accuracyTotal: 1,
+      },
+      source: "demo",
+    };
+  }
+
+  const response = await fetch(`${API_BASE_URL}/attorney/matters/${matter.id}/ai-prep/feedback`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders(getAuthToken)),
+    },
+    body: JSON.stringify({
+      issueIndex,
+      action,
+      reasonTag: `${action}_from_workbench`,
+      correctedDetail: action === "edit" ? "Attorney edited this issue in the workbench." : null,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`AI prep feedback failed: ${response.status}`);
+  }
+  return { feedback: (await response.json()) as AIPrepFeedbackResponse, source: "api" };
+}
+
+export async function recordAttorneyReviewMinutes(
+  matter: Matter,
+  minutes: number,
+  getAuthToken?: GetAuthToken,
+): Promise<{ matter: Matter; source: PortalApiState }> {
+  if (matter.id.startsWith("matter_demo_") || matter.id.startsWith("matter_local_")) {
+    return { matter: { ...matter, attorneyReviewMinutes: minutes }, source: "demo" };
+  }
+
+  const response = await fetch(`${API_BASE_URL}/attorney/matters/${matter.id}/review-minutes`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders(getAuthToken)),
+    },
+    body: JSON.stringify({ minutes }),
+  });
+  if (!response.ok) {
+    throw new Error(`Review minutes failed: ${response.status}`);
+  }
+  const payload = (await response.json()) as AttorneyReviewMinutesResponse;
+  return { matter: mapApiMatter(payload.matter), source: "api" };
+}
+
+export async function fetchPlaybooks(getAuthToken?: GetAuthToken): Promise<{ playbooks: Playbook[]; source: PortalApiState }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/attorney/playbooks`, {
+      headers: await authHeaders(getAuthToken),
+    });
+    if (!response.ok) {
+      throw new Error(`Playbook list failed: ${response.status}`);
+    }
+    return { playbooks: ((await response.json()) as PlaybookListResponse).playbooks, source: "api" };
+  } catch {
+    return { playbooks: demoPlaybooks(), source: "demo" };
+  }
+}
+
+export async function createPlaybookOverlay(getAuthToken?: GetAuthToken): Promise<{ playbook: Playbook; source: PortalApiState }> {
+  const body = {
+    name: "Client NDA overlay",
+    contract_type: "nda",
+    jurisdiction: "general",
+  };
+  try {
+    const response = await fetch(`${API_BASE_URL}/attorney/playbooks`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(await authHeaders(getAuthToken)),
+      },
+      body: JSON.stringify(body),
+    });
+    if (!response.ok) {
+      throw new Error(`Playbook create failed: ${response.status}`);
+    }
+    return { playbook: (await response.json()) as Playbook, source: "api" };
+  } catch {
+    return { playbook: demoPlaybooks()[0], source: "demo" };
+  }
+}
+
+export async function addDefaultPlaybookCheck(
+  playbook: Playbook,
+  getAuthToken?: GetAuthToken,
+): Promise<{ playbook: Playbook; source: PortalApiState }> {
+  const body = {
+    key: `fallback_${Date.now()}`,
+    title: "Check fallback language",
+    detection: "Find fallback language for the negotiated risk position.",
+    severity: "medium",
+    remediation_intent: "Add a practical fallback that protects the client without blocking the deal.",
+    preferred_language: "Use the preferred Charter Law fallback for this risk.",
+    acceptable_fallback: "A narrower fallback is acceptable if the commercial risk is low.",
+    unacceptable_fallback: "No fallback position is recorded.",
+  };
+  if (playbook.id.startsWith("playbook_demo")) {
+    return { playbook: { ...playbook, checks: [...playbook.checks, demoCheck(body.key)] }, source: "demo" };
+  }
+  const response = await fetch(`${API_BASE_URL}/attorney/playbooks/${playbook.id}/checks`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders(getAuthToken)),
+    },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) {
+    throw new Error(`Playbook check create failed: ${response.status}`);
+  }
+  return { playbook: (await response.json()) as Playbook, source: "api" };
+}
+
+export async function strengthenPlaybookCheck(
+  check: PlaybookCheck,
+  getAuthToken?: GetAuthToken,
+): Promise<{ check: PlaybookCheck; source: PortalApiState }> {
+  if (check.id.startsWith("check_demo")) {
+    return {
+      check: { ...check, severity: "high", acceptableFallback: "Escalate this fallback unless client approves the risk." },
+      source: "demo",
+    };
+  }
+  const response = await fetch(`${API_BASE_URL}/attorney/playbooks/checks/${check.id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      ...(await authHeaders(getAuthToken)),
+    },
+    body: JSON.stringify({
+      severity: "high",
+      acceptable_fallback: "Escalate this fallback unless client approves the risk.",
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Playbook check update failed: ${response.status}`);
+  }
+  return { check: (await response.json()) as PlaybookCheck, source: "api" };
 }
 
 export async function fetchDeliverableUrl(matterId: string, getAuthToken?: GetAuthToken): Promise<string> {
@@ -276,6 +533,64 @@ export async function approveMatterDeliverable(
   return {
     matter: mapApiMatter(payload.matter),
     source: "api",
+  };
+}
+
+function demoAIPrep(matter: Matter): AIPrepResult {
+  return {
+    matterId: matter.id,
+    mode: "stub",
+    summary: `Internal preparation summary for ${matter.file}. Focus attorney review on the highest-risk clauses before approval.`,
+    createdAt: new Date().toISOString(),
+    issues: [
+      {
+        title: "Check limitation of liability",
+        severity: matter.riskRoute === "escalate" ? "high" : "medium",
+        detail: "Confirm the liability cap, carve-outs, and commercial value line up.",
+        confidence: matter.riskRoute === "escalate" ? "weak" : "medium",
+        playbookCheckId: "demo_check_liability",
+        playbookCheckKey: "liability_cap",
+      },
+      {
+        title: "Check termination mechanics",
+        severity: "medium",
+        detail: "Confirm notice, cure rights, and post-termination obligations are workable.",
+        confidence: "medium",
+        playbookCheckId: "demo_check_termination",
+        playbookCheckKey: "termination",
+      },
+    ],
+  };
+}
+
+function demoPlaybooks(): Playbook[] {
+  return [
+    {
+      id: "playbook_demo_nda",
+      name: "Demo NDA overlay",
+      contractType: "nda",
+      jurisdiction: "general",
+      organisationId: "demo",
+      createdAt: new Date().toISOString(),
+      checks: [demoCheck("mutuality")],
+    },
+  ];
+}
+
+function demoCheck(key: string): PlaybookCheck {
+  return {
+    id: `check_demo_${key}`,
+    key,
+    title: "Confirm NDA mutuality",
+    detection: "Find whether confidentiality obligations apply to one or both parties.",
+    severity: "medium",
+    remediationIntent: "Make obligations mutual unless one-way treatment is justified.",
+    preferredLanguage: "Both parties protect confidential information using reciprocal obligations.",
+    acceptableFallback: "One-way obligations are acceptable only for a clear business reason.",
+    unacceptableFallback: "Founder discloses sensitive information without reciprocal protection.",
+    accuracyCorrect: 0,
+    accuracyTotal: 0,
+    createdAt: new Date().toISOString(),
   };
 }
 

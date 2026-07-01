@@ -7,12 +7,20 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.session import SessionLocal
-from app.models.matter import MatterAIPrepModel, MatterEventModel, MatterFileModel, MatterModel
-from app.schemas.ai import AIPrepResult
+from app.models.matter import (
+    MatterAIFeedbackModel,
+    MatterAIPrepModel,
+    MatterDraftDeliverableModel,
+    MatterEventModel,
+    MatterFileModel,
+    MatterModel,
+)
+from app.schemas.ai import AIPrepFeedbackRequest, AIPrepFeedbackResponse, AIPrepResult
 from app.schemas.matters import (
     AttorneyApprovalRequest,
     CreateMatterRequest,
     CreateMatterResponse,
+    AttorneyReviewMinutesRequest,
     MatterDetailResponse,
     MatterEvent,
     MatterStatus,
@@ -22,7 +30,10 @@ from app.schemas.matters import (
     demo_expiry,
 )
 from app.services.ai_prep_service import ai_prep_service, issues_from_json, issues_to_json
+from app.services.deliverable_service import DeliverableService, deliverable_service
 from app.services.notifications import NotificationService, notification_service
+from app.services.playbook_service import PlaybookService
+from app.services.risk_service import RiskService, risk_service
 from app.services.storage_service import StorageService, storage_service
 
 
@@ -42,11 +53,17 @@ class MatterService:
         session_factory: Callable[[], Session] | sessionmaker[Session] = SessionLocal,
         storage: StorageService = storage_service,
         notifications: NotificationService = notification_service,
+        playbooks: PlaybookService | None = None,
+        deliverables: DeliverableService = deliverable_service,
+        risks: RiskService = risk_service,
         seed_demo: bool = False,
     ) -> None:
         self._session_factory = session_factory
         self._storage = storage
         self._notifications = notifications
+        self._playbooks = playbooks or PlaybookService(session_factory)
+        self._deliverables = deliverables
+        self._risks = risks
         if seed_demo:
             self.seed_demo_data()
 
@@ -82,6 +99,7 @@ class MatterService:
                 organisation_id=organisation_id,
                 file_name=request.file_name,
                 service_tier=request.service_tier,
+                contract_type=request.contract_type,
                 status="intake",
                 upload_status="awaiting_upload",
                 payment_status="unpaid",
@@ -162,12 +180,33 @@ class MatterService:
                         note="Internal AI preparation started after upload.",
                     )
                 )
-                prep = ai_prep_service.generate_for_uploaded_contract(matter.file_name, matter.service_tier)
+                prep = ai_prep_service.generate_for_uploaded_contract(
+                    matter.file_name,
+                    matter.service_tier,
+                    self._playbook_checks_for_contract(matter.contract_type, matter.organisation_id),
+                )
                 matter.ai_preps.append(
                     MatterAIPrepModel(
                         mode=prep.mode,
                         summary=prep.summary,
                         issues_json=issues_to_json(prep.issues),
+                        created_at=datetime.now(timezone.utc),
+                    )
+                )
+                risk = self._risks.assess(prep.issues)
+                matter.risk_score = risk.score
+                matter.risk_route = risk.route
+                draft = self._deliverables.generate_internal_draft(matter.id, matter.file_name, prep.issues)
+                matter.draft_deliverables.append(
+                    MatterDraftDeliverableModel(
+                        redline_file_name=draft.redline_file_name,
+                        redline_storage_bucket=self._storage.bucket_name(),
+                        redline_storage_object=draft.redline_storage_object,
+                        cover_letter_file_name=draft.cover_letter_file_name,
+                        cover_letter_storage_bucket=self._storage.bucket_name(),
+                        cover_letter_storage_object=draft.cover_letter_storage_object,
+                        cover_letter_body=draft.cover_letter_body,
+                        status="internal_only",
                         created_at=datetime.now(timezone.utc),
                     )
                 )
@@ -178,7 +217,7 @@ class MatterService:
                         type="ai_prep_completed",
                         actor="system",
                         occurred_at=datetime.now(timezone.utc),
-                        note="Internal AI preparation completed and matter moved to attorney queue.",
+                        note=f"Internal AI preparation completed; risk route is {risk.route}.",
                     )
                 )
             db.commit()
@@ -280,6 +319,29 @@ class MatterService:
             self._notifications.notify_status_change(matter.id, organisation_id, "delivered")
             return matter_to_summary(matter)
 
+    def record_attorney_review_minutes(
+        self,
+        matter_id: str,
+        organisation_id: str,
+        request: AttorneyReviewMinutesRequest,
+    ) -> MatterSummary:
+        with self._session_factory() as db:
+            matter = self._get_matter_model(db, matter_id, organisation_id)
+            if matter is None:
+                raise HTTPException(status_code=404, detail="Matter not found")
+            matter.attorney_review_minutes = request.minutes
+            matter.events.append(
+                MatterEventModel(
+                    type="attorney_minutes_recorded",
+                    actor="attorney",
+                    occurred_at=datetime.now(timezone.utc),
+                    note=f"Attorney review minutes recorded: {request.minutes}.",
+                )
+            )
+            db.commit()
+            db.refresh(matter)
+            return matter_to_summary(matter)
+
     def delivery_download_url(self, matter_id: str, organisation_id: str) -> str:
         with self._session_factory() as db:
             matter = self._get_matter_model(db, matter_id, organisation_id)
@@ -350,12 +412,15 @@ class MatterService:
                     organisation_id=organisation_id,
                     file_name=file_name,
                     service_tier="standard_redline",
+                    contract_type="demo",
                     status=status,
                     upload_status="uploaded",
                     payment_status="paid" if status == "delivered" else "checkout_pending",
                     submitted_at=now,
                     next_update_eta_minutes=eta,
                     deliverable_available=status == "delivered",
+                    risk_score=2 if status == "delivered" else 5,
+                    risk_route="fast_track" if status == "delivered" else "standard_review",
                 )
                 matter.events.append(
                     MatterEventModel(
@@ -394,6 +459,66 @@ class MatterService:
                 created_at=prep.created_at,
             )
 
+    def record_ai_prep_feedback(
+        self,
+        matter_id: str,
+        organisation_id: str,
+        request: AIPrepFeedbackRequest,
+    ) -> AIPrepFeedbackResponse:
+        with self._session_factory() as db:
+            matter = self._get_matter_model(db, matter_id, organisation_id)
+            if matter is None:
+                raise HTTPException(status_code=404, detail="Matter not found")
+            prep = db.scalar(
+                select(MatterAIPrepModel)
+                .where(MatterAIPrepModel.matter_id == matter_id)
+                .order_by(MatterAIPrepModel.created_at.desc(), MatterAIPrepModel.id.desc())
+            )
+            if prep is None:
+                raise HTTPException(status_code=404, detail="Internal AI preparation not found")
+
+            issues = issues_from_json(prep.issues_json)
+            if request.issue_index >= len(issues):
+                raise HTTPException(status_code=404, detail="AI preparation issue not found")
+
+            issue = issues[request.issue_index]
+            feedback = MatterAIFeedbackModel(
+                matter_id=matter_id,
+                playbook_check_id=issue.playbook_check_id,
+                issue_title=issue.title,
+                action=request.action,
+                reason_tag=request.reason_tag,
+                corrected_detail=request.corrected_detail,
+            )
+            db.add(feedback)
+            matter.events.append(
+                MatterEventModel(
+                    type="ai_prep_feedback_recorded",
+                    actor="attorney",
+                    occurred_at=datetime.now(timezone.utc),
+                    note=f"Attorney marked AI issue '{issue.title}' as {request.action}.",
+                )
+            )
+            db.commit()
+
+        accuracy: tuple[int, int] | None = None
+        if issue.playbook_check_id:
+            accuracy = self._playbooks.record_check_feedback(
+                issue.playbook_check_id,
+                was_correct=request.action == "apply",
+                corrected_detail=request.corrected_detail if request.action == "edit" else None,
+            )
+
+        return AIPrepFeedbackResponse(
+            matter_id=matter_id,
+            issue_title=issue.title,
+            action=request.action,
+            reason_tag=request.reason_tag,
+            playbook_check_id=issue.playbook_check_id,
+            accuracy_correct=accuracy[0] if accuracy else None,
+            accuracy_total=accuracy[1] if accuracy else None,
+        )
+
     def activity_report(self, organisation_id: str) -> dict:
         with self._session_factory() as db:
             rows = db.scalars(
@@ -417,18 +542,28 @@ class MatterService:
             return None
         return db.scalar(select(MatterModel).where(MatterModel.checkout_session_id == checkout_session_id))
 
+    def _playbook_checks_for_contract(self, contract_type: str, organisation_id: str):
+        playbook = self._playbooks.resolve_for_contract(contract_type=contract_type, organisation_id=organisation_id)
+        if playbook is None:
+            return []
+        return playbook.checks
+
 
 def matter_to_summary(matter: MatterModel) -> MatterSummary:
     return MatterSummary(
         id=matter.id,
         file_name=matter.file_name,
         service_tier=matter.service_tier,  # type: ignore[arg-type]
+        contract_type=matter.contract_type,
         status=matter.status,  # type: ignore[arg-type]
         upload_status=matter.upload_status,  # type: ignore[arg-type]
         payment_status=matter.payment_status,  # type: ignore[arg-type]
         submitted_at=matter.submitted_at,
         next_update_eta_minutes=matter.next_update_eta_minutes,
         deliverable_available=matter.deliverable_available,
+        risk_score=matter.risk_score,
+        risk_route=matter.risk_route,  # type: ignore[arg-type]
+        attorney_review_minutes=matter.attorney_review_minutes,
     )
 
 

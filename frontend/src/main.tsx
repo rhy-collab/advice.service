@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { AdminPage } from "./features/admin/AdminPage";
+import { AttorneyWorkbenchPage } from "./features/admin/AttorneyWorkbenchPage";
 import { LandingPage } from "./features/landing/LandingPage";
 import { PortalPage } from "./features/portal/PortalPage";
 import { initFrontendSentry } from "./lib/sentry";
@@ -17,7 +18,7 @@ function App() {
 
   if (!clerkPublishableKey) {
     if (route === "admin" || route === "attorney") {
-      return <AdminPage demoMode />;
+      return route === "attorney" ? <AttorneyWorkbenchPage demoMode /> : <AdminPage demoMode />;
     }
     return route === "portal" ? <PortalPage demoMode /> : <LandingPage />;
   }
@@ -33,7 +34,7 @@ function AuthenticatedApp({ route }: { route: AppRoute }) {
   const { getToken } = useAuth();
 
   if (route === "admin" || route === "attorney") {
-    return <AdminPage getAuthToken={getToken} />;
+    return route === "attorney" ? <AttorneyWorkbenchPage getAuthToken={getToken} /> : <AdminPage getAuthToken={getToken} />;
   }
 
   return route === "portal" ? <PortalPage getAuthToken={getToken} /> : <LandingPage />;

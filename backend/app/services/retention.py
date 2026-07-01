@@ -10,17 +10,24 @@ from sqlalchemy.orm import Session, sessionmaker
 from app.db.session import SessionLocal
 from app.models.intake import PublicIntakeModel
 from app.models.matter import MatterFileModel, MatterModel
+from app.services.storage_service import StorageService, storage_service
 
 
 @dataclass(frozen=True)
 class RetentionReport:
     public_intakes_deleted: int
     matter_file_refs_deleted: int
+    storage_objects_deleted: int
 
 
 class RetentionService:
-    def __init__(self, session_factory: sessionmaker[Session] = SessionLocal) -> None:
+    def __init__(
+        self,
+        session_factory: sessionmaker[Session] = SessionLocal,
+        storage: StorageService = storage_service,
+    ) -> None:
         self._session_factory = session_factory
+        self._storage = storage
 
     def purge_expired(self, now: datetime | None = None) -> RetentionReport:
         current = now or datetime.now(timezone.utc)
@@ -39,7 +46,14 @@ class RetentionService:
                 )
             ).all()
             matter_file_refs_deleted = 0
+            storage_objects_deleted = 0
             if old_matter_ids:
+                expired_files = db.scalars(
+                    select(MatterFileModel).where(MatterFileModel.matter_id.in_(old_matter_ids))
+                ).all()
+                for file in expired_files:
+                    if self._storage.delete_object(file.storage_bucket, file.storage_object):
+                        storage_objects_deleted += 1
                 matter_file_refs_deleted = db.execute(
                     delete(MatterFileModel).where(MatterFileModel.matter_id.in_(old_matter_ids))
                 ).rowcount or 0
@@ -49,6 +63,7 @@ class RetentionService:
         return RetentionReport(
             public_intakes_deleted=public_intakes_deleted,
             matter_file_refs_deleted=matter_file_refs_deleted,
+            storage_objects_deleted=storage_objects_deleted,
         )
 
 

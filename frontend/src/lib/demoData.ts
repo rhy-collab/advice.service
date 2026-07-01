@@ -13,6 +13,9 @@ export type Matter = {
   eta: string;
   activeStage: number;
   deliverableAvailable: boolean;
+  riskScore: number;
+  riskRoute: "fast_track" | "standard_review" | "escalate";
+  attorneyReviewMinutes: number | null;
 };
 
 export const matters: Matter[] = [
@@ -27,6 +30,9 @@ export const matters: Matter[] = [
     eta: "42 minutes",
     activeStage: 3,
     deliverableAvailable: false,
+    riskScore: 8,
+    riskRoute: "escalate",
+    attorneyReviewMinutes: null,
   },
   {
     id: "matter_demo_2",
@@ -39,6 +45,9 @@ export const matters: Matter[] = [
     eta: "2 hours",
     activeStage: 1,
     deliverableAvailable: false,
+    riskScore: 5,
+    riskRoute: "standard_review",
+    attorneyReviewMinutes: null,
   },
   {
     id: "matter_demo_3",
@@ -51,6 +60,9 @@ export const matters: Matter[] = [
     eta: "Complete",
     activeStage: 4,
     deliverableAvailable: true,
+    riskScore: 2,
+    riskRoute: "fast_track",
+    attorneyReviewMinutes: 22,
   },
 ];
 
