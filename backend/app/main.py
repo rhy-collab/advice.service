@@ -7,7 +7,7 @@ from sqlalchemy import text
 from app.config import load_settings, validate_settings
 from app.db.session import SessionLocal, run_migrations
 from app.middleware.public_hardening import PublicEndpointHardeningMiddleware
-from app.observability import init_sentry
+from app.observability import RequestIdMiddleware, init_sentry
 from app.routers import attorney, matters, public, reports, users
 from app.services.matter_service import matter_service
 
@@ -21,6 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(PublicEndpointHardeningMiddleware)
+app.add_middleware(RequestIdMiddleware)
 
 
 def database_ready(session_factory=SessionLocal) -> bool:

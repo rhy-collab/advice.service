@@ -4,7 +4,10 @@ import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { AdminPage } from "./features/admin/AdminPage";
 import { LandingPage } from "./features/landing/LandingPage";
 import { PortalPage } from "./features/portal/PortalPage";
+import { initFrontendSentry } from "./lib/sentry";
 import "./styles.css";
+
+initFrontendSentry();
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
 type AppRoute = "admin" | "attorney" | "home" | "portal";

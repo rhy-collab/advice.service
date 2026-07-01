@@ -144,3 +144,24 @@
 
 **Remaining work**
 - Wire a real email provider once the account and verified sender/domain exist.
+
+## Issue 8 — Observability completion
+
+**Status:** Completed
+
+**What changed**
+- Added request ID middleware with `x-request-id` response headers.
+- Added structured JSON request logs with method/path/status/duration only.
+- Added tests proving the request ID and log shape, with no body/content logging.
+- Added frontend Sentry initialization guarded by `VITE_SENTRY_DSN`.
+- Added `@sentry/react`.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `cd frontend && npm run build`
+
+**Result**
+- Backend and frontend verification passed.
+
+**Remaining work**
+- Add real Sentry DSNs in deployment environment once the project exists.

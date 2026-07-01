@@ -68,11 +68,12 @@
 **Verification:** `pytest -q`.
 **Security/compliance:** No confidential content in notifications. **Files:** `app/services/notifications.py`, hook in `matter_service`, tests. **Depends on:** —. **Done means:** customers are notified on progress.
 
-## Issue 8 — Observability completion ⬜
+## Issue 8 — Observability completion ✅
 **Objective:** Structured request logging + request IDs (backend) and frontend Sentry init.
 **Why:** You can't run a legal product blind to errors.
 **Scope:** Request-ID middleware + structured logs (no secrets/documents); wire Sentry on the frontend (env-guarded like the backend).
 **Acceptance:** Each request logs a correlation id; frontend Sentry initialises only when its DSN is set; tested where practical.
+**Current status:** Backend emits `x-request-id` and structured JSON request logs; frontend initializes Sentry only when `VITE_SENTRY_DSN` is set.
 **Verification:** `pytest -q`; `npm run build`.
 **Security/compliance:** Never log document contents or secrets. **Files:** `app/observability.py`, middleware, `frontend/src/main.tsx`, tests. **Depends on:** —. **Done means:** end-to-end observability without leaking data.
 
