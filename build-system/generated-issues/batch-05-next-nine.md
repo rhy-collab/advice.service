@@ -51,11 +51,12 @@
 **Verification:** `pytest -q`.
 **Security/compliance:** none new. **Files:** `app/services/*`, `app/routers/attorney.py`, tests. **Depends on:** 2. **Done means:** confidence + routing drive attorney attention.
 
-## Issue 6 — Real Anthropic integration (internal-only, behind key) ⬜
+## Issue 6 — Real Anthropic integration (internal-only, behind key) ✅
 **Objective:** Replace the AI-prep placeholder with a real Claude call for the summary + issues.
 **Why:** Move from stub to actual AI preparation.
 **Scope:** Wire the Anthropic client behind `ANTHROPIC_API_KEY`; keep the deterministic stub fallback when unset; enforce a no-training data posture; results remain internal-only. Document the exact key/setup step in `BLOCKERS.md`.
 **Acceptance:** With a key, real output is produced and stored internally; without a key, the stub still works; tests use the stub.
+**Current status:** `ANTHROPIC_API_KEY` now switches AI prep onto the Anthropic Messages API path, with deterministic fallback when unset; setup is documented in `.env.example` and `BLOCKERS.md`.
 **Verification:** `pytest -q`.
 **Security/compliance:** Internal-only; no document content logged; confirm no-training posture. **Files:** `app/services/ai_prep_service.py`, `.env.example`, `BLOCKERS.md`, tests. **Depends on:** 2. **Done means:** real AI prep is available when keyed. *(Live key is a human step.)*
 

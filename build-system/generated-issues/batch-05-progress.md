@@ -120,3 +120,28 @@
 
 **Remaining work**
 - Issue 7 should visually prioritize weak-confidence and escalated matters in the attorney workbench.
+
+## Issue 6 — Real Anthropic integration
+
+**Status:** Completed
+
+**What changed**
+- Added an Anthropic Messages API client behind `ANTHROPIC_API_KEY`.
+- Added `ANTHROPIC_MODEL` and `ANTHROPIC_VERSION` configuration.
+- AI prep now uses the Anthropic path when keyed and keeps the deterministic stub fallback when unset.
+- Parsed Anthropic JSON output into the existing internal AI-prep schema.
+- Added a safe fallback if Anthropic returns malformed JSON.
+- Documented the production key/no-document-logging setup in `BLOCKERS.md`.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 58 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Add the live production secret outside git before expecting real AI output in deployment.
