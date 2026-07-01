@@ -127,3 +127,13 @@ class AssistantMessageResponse(BaseModel):
 
 def demo_expiry() -> datetime:
     return datetime.now(timezone.utc) + timedelta(minutes=15)
+
+
+class TransitionRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    status: MatterStatus
+
+
+class MatterEventsResponse(BaseModel):
+    events: list[MatterEvent]
