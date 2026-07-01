@@ -9,26 +9,25 @@
 
 ## Build Progress (live) — updated 1 July 2026
 
-**Merged to `main` (`c11f381`), 32 backend tests passing, CI running on every push/PR.**
+**Merged to `main` (`bdf55bb`), 51 backend tests passing, CI green (backend + frontend).**
 
-Foundation + two batches are now in `main`:
-- **Backend** (FastAPI + SQLAlchemy + Alembic): matter lifecycle with **guarded transitions**; org-scoped access; attorney-role approval gate; Stripe checkout + webhook; signed upload/download URLs; an audit/events trail with a **read endpoint + org activity report**; typed **config validation** (fails closed in production); **liveness + readiness** probes.
-- **Lead-gen (Codex batch-02):** a free **Contract Mistake Checker** (processes the .docx in memory, stores nothing, "not legal advice") and a **public intake** form, with frontend.
-- **Hardening (batch-03):** env-guarded **Sentry**; **Dockerfiles** for backend + frontend; a **Cloud Run deploy recipe**; `docs/security-posture.md`.
-- **Customer portal** (Vite + React + TS): landing, portal, admin pages. **CI** runs backend tests + frontend build.
-- **Packaging fixed** (Python >=3.12, setuptools app-only discovery) so CI installs cleanly.
+In `main` now (foundation + Batches 02-04):
+- **Backend**: guarded matter lifecycle; org-scoped access; **attorney-only workspace** (queue + approval + AI-prep view), approval no longer in the customer API; **internal-only AI prep engine** (summary + issue list, Anthropic behind a safe stub); **playbook data model**; Stripe checkout + webhook; signed upload/download URLs; audit trail + read/report endpoints; typed config validation (fails closed); liveness + readiness probes; **notifications**, **retention/privacy**, **public-endpoint hardening** (rate-limit + size caps).
+- **Lead-gen**: free Contract Mistake Checker (stores nothing) + public intake.
+- **Frontend**: customer portal (upload -> status -> download), attorney page, admin, landing; env-guarded Sentry.
+- **Observability/deploy**: request logging, env-guarded Sentry (BE+FE), Dockerfiles + Cloud Run recipe.
+- **Packaging fixed**; CI runs backend tests + frontend build on every push/PR.
 
-Invariants enforced in code + tested: AI never presented as legal advice; delivery requires a recorded attorney-role approval; org isolation on every request; fail-closed auth; signed-only file URLs; the free checker never stores a file.
+Invariants enforced + tested: AI never shown to customers as legal advice; delivery requires attorney-role approval; org isolation everywhere; fail-closed auth; signed-only file URLs; free checker stores nothing; AI prep is attorney-only.
 
-### Honest gates still standing between here and "production ready"
-1. **Separate attorney workspace** — approval still lives in the customer API behind a role check; the dedicated attorney app + cross-org routing is next.
-2. **Real accounts + actual deploy** — Dockerfiles + deploy recipe exist, but Cloud Run / Cloud SQL / GCS / Clerk / Stripe / Sentry accounts + secrets must be created and wired.
-3. **The AI engine + playbook + feedback loop** — the core moat, not built.
-4. **Public-endpoint hardening** — rate-limiting + request-size caps for the free checker / intake.
-5. **The one-off security review** — before any real client contract.
-6. **The legal foundation** — reviewing attorney engaged + structure confirmed with counsel. Gates everything.
+### Gates still standing before "production ready"
+1. **The moat**: playbook-DRIVEN AI prep + the attorney feedback loop + redline/cover-letter deliverable (Batch 05).
+2. **Real Anthropic integration** wired behind the key (still internal-only).
+3. **Real accounts + actual deploy** (Cloud Run/SQL/GCS/Clerk/Stripe/Sentry secrets).
+4. **Retention completion** — delete the actual GCS objects, not just DB refs (Batch 05 #1).
+5. **The one-off security review**; **the legal foundation** (attorney engaged + structure confirmed).
 
-Next build step: **Batch 04** (`build-system/generated-issues/batch-04-next-nine.md`) — attorney workspace, public hardening, AI engine v1, playbook schema, notifications, observability, data retention.
+Next build step: **Batch 05** (`build-system/generated-issues/batch-05-next-nine.md`) — playbook-driven AI, feedback loop, redline + cover letter, confidence/routing, attorney workbench v2.
 
 ---
 
