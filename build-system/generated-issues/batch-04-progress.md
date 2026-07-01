@@ -66,3 +66,23 @@
 
 **Remaining work**
 - Later batch should build the full cross-organisation attorney workbench model; this first slice scopes attorneys to their active Clerk organisation.
+
+## Issue 4 — Customer portal completion
+
+**Status:** Completed
+
+**What changed**
+- Converted the dashboard `Upload .docx` action into a real jump link to the upload panel.
+- Added the missing `Attorney Queue` stage so the customer status tracker reflects the backend lifecycle: Received → AI Review → Attorney Queue → Attorney Review → Delivered.
+- Confirmed portal upload code still creates a matter, uses signed/demo upload targets, marks upload complete, creates checkout, and disables download until `deliverableAvailable`.
+
+**Commands run**
+- `cd frontend && npm run build`
+- Browser verification at `http://127.0.0.1:5173/portal`
+
+**Result**
+- Frontend build passed.
+- Browser check confirmed the portal renders, has the upload panel, shows the 5-stage tracker, and keeps pending deliverables disabled.
+
+**Remaining work**
+- Real end-to-end upload/payment smoke test requires live Clerk/Stripe/GCS credentials or a fuller mocked browser fixture.

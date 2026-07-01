@@ -32,11 +32,12 @@
 **Verification:** `pytest -q`; `npm run build`.
 **Security/compliance:** Attorney-role enforced; org/firm scoping. **Files:** `app/routers/attorney.py`, `frontend` or `attorney-app`, tests. **Depends on:** 1. **Done means:** attorneys action their queue in a dedicated surface.
 
-## Issue 4 — Customer portal completion ⬜
+## Issue 4 — Customer portal completion ✅
 **Objective:** Wire upload → status tracker → download end-to-end against the backend.
 **Why:** The portal has pages; the full happy path must work for a real customer.
 **Scope:** Upload to a signed URL, create matter; show the 5-stage status tracker; enable download only when `delivered`.
 **Acceptance:** A customer can upload, watch status, and download an approved deliverable; org-scoped.
+**Current status:** Portal upload creates a matter, uploads through the signed/demo target, marks upload complete, creates checkout, renders the backend lifecycle as a five-stage tracker, and keeps download disabled until `deliverableAvailable`.
 **Verification:** `npm run build`; backend `pytest -q`; manual click-test on preview.
 **Security/compliance:** No draft downloadable before approval; org isolation. **Files:** `frontend/src/*`, `app/routers/matters.py` (if needed), tests. **Depends on:** 3. **Done means:** the customer happy path is complete.
 

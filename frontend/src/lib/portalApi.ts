@@ -330,9 +330,9 @@ function mapActiveStage(status: ApiMatter["status"]): number {
     intake: 0,
     ai_review: 1,
     attorney_queue: 1,
-    attorney_review: 2,
-    delivered: 3,
-    completed: 3,
+    attorney_review: 3,
+    delivered: 4,
+    completed: 4,
   };
   return stages[status];
 }

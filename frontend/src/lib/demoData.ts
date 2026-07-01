@@ -1,6 +1,6 @@
 import { CircleDollarSign, Scale, ShieldCheck } from "lucide-react";
 
-export const stages = ["Received", "AI Review", "Attorney Review", "Delivered"] as const;
+export const stages = ["Received", "AI Review", "Attorney Queue", "Attorney Review", "Delivered"] as const;
 
 export type Matter = {
   id: string;
@@ -25,7 +25,7 @@ export const matters: Matter[] = [
     paymentStatus: "Checkout pending",
     submitted: "Today",
     eta: "42 minutes",
-    activeStage: 2,
+    activeStage: 3,
     deliverableAvailable: false,
   },
   {
@@ -49,7 +49,7 @@ export const matters: Matter[] = [
     paymentStatus: "Paid",
     submitted: "Jun 28",
     eta: "Complete",
-    activeStage: 3,
+    activeStage: 4,
     deliverableAvailable: true,
   },
 ];
