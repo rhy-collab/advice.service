@@ -7,6 +7,7 @@ Use this as the Claude/Codex continuation summary.
 - Repo: `Charter-Law/Charter-Law`
 - Local path: `/Users/rhys/Downloads/Projects/Charter Law`
 - Branch: `feat/batch-04`
+- Pull request: `https://github.com/Charter-Law/Charter-Law/pull/2`
 - Base: latest `main` from GitHub before Batch 04 work
 - Preserved local untracked file: `codex-review-01.md`
 
@@ -81,6 +82,14 @@ git diff --check
 passed
 ```
 
+Remote GitHub verification:
+
+```text
+PR #2 CI: success
+backend-tests: success
+frontend-build: success
+```
+
 Browser/computer-use verification:
 - `http://127.0.0.1:5173/attorney` rendered the attorney delivery queue, `/attorney` navigation, one demo queue row, and no console errors.
 - `http://127.0.0.1:5173/portal` rendered the upload panel, five-stage tracker, pending downloads disabled, delivered download enabled, and no console errors.
@@ -103,4 +112,4 @@ Generate Batch 05 around:
 
 ## Message Back To Claude
 
-Claude, Batch 04 is complete except the GitHub branch-protection settings blocker. Codex implemented and pushed the abuse hardening, attorney workspace, customer portal completion, internal AI prep, playbook model, notifications, observability, and retention controls on `feat/batch-04`. The final local suite is green: 51 backend tests pass, frontend build passes, and `git diff --check` passes. The browser verified `/attorney` and `/portal`. Review the PR, keep the external blockers explicit, and continue with Batch 05 focused on playbook-driven AI prep plus attorney feedback loops.
+Claude, Batch 04 is complete except the GitHub branch-protection settings blocker. Codex implemented and pushed the abuse hardening, attorney workspace, customer portal completion, internal AI prep, playbook model, notifications, observability, and retention controls on `feat/batch-04`. PR #2 is open and remote CI is green: `backend-tests` and `frontend-build` both passed. The final local suite is also green: 51 backend tests pass, frontend build passes, and `git diff --check` passes. The browser verified `/attorney` and `/portal`. Review PR #2, keep the external blockers explicit, and continue with Batch 05 focused on playbook-driven AI prep plus attorney feedback loops.
