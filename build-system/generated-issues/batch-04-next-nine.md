@@ -77,11 +77,12 @@
 **Verification:** `pytest -q`; `npm run build`.
 **Security/compliance:** Never log document contents or secrets. **Files:** `app/observability.py`, middleware, `frontend/src/main.tsx`, tests. **Depends on:** —. **Done means:** end-to-end observability without leaking data.
 
-## Issue 9 — Data retention & privacy ⬜
+## Issue 9 — Data retention & privacy ✅
 **Objective:** Define + enforce retention/deletion for public intakes (PII) and documents.
 **Why:** Confidential legal material + PII need a lifecycle, not indefinite storage.
 **Scope:** A documented retention policy; a deletion path/job for old public intakes and matter files; confirm the free checker persists nothing; a privacy note surfaced in the API/docs.
 **Acceptance:** A deletion routine removes data past retention; the free tool provably stores nothing; tested.
+**Current status:** `RetentionService` purges expired public intakes and old delivered/completed matter file references; retention windows are env-configured; docs describe the remaining live GCS deletion wiring.
 **Verification:** `pytest -q`.
 **Security/compliance:** This issue *is* a privacy control. **Files:** `app/services/retention.py`, `docs/security-posture.md`, tests. **Depends on:** 6, 7. **Done means:** data has a defined, enforced lifecycle.
 

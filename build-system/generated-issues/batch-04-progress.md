@@ -165,3 +165,25 @@
 
 **Remaining work**
 - Add real Sentry DSNs in deployment environment once the project exists.
+
+## Issue 9 — Data retention & privacy
+
+**Status:** Completed
+
+**What changed**
+- Added `RetentionService`.
+- Added env-configured retention windows for public intakes and matter file references.
+- Added purge logic for expired public intake PII.
+- Added purge logic for old delivered/completed matter file references.
+- Updated security/API docs with privacy and retention notes.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `cd frontend && npm run build`
+- `git diff --check`
+
+**Result**
+- Backend and frontend verification passed.
+
+**Remaining work**
+- Wire live GCS object deletion once production credentials and bucket policy exist.

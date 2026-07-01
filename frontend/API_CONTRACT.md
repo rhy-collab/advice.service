@@ -52,7 +52,7 @@ Response:
 }
 ```
 
-Privacy invariant: `stored` must remain `false`; the checker must not create matter rows, intake rows, GCS objects, or logs containing contract text.
+Privacy invariant: `stored` must remain `false`; the checker must not create matter rows, intake rows, GCS objects, or logs containing contract text. Public intake PII is subject to the backend retention window in `PUBLIC_INTAKE_RETENTION_DAYS`.
 
 ### `POST /v1/public/intake`
 
