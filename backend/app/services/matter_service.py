@@ -23,6 +23,16 @@ from app.schemas.matters import (
 from app.services.storage_service import StorageService, storage_service
 
 
+LEGAL_TRANSITIONS: dict[str, set[str]] = {
+    "intake": {"ai_review"},
+    "ai_review": {"attorney_queue"},
+    "attorney_queue": {"attorney_review"},
+    "attorney_review": {"delivered"},
+    "delivered": {"completed"},
+    "completed": set(),
+}
+
+
 class MatterService:
     def __init__(
         self,
@@ -250,6 +260,10 @@ class MatterService:
             if matter is None:
                 raise HTTPException(status_code=404, detail="Matter not found")
 
+            allowed = LEGAL_TRANSITIONS.get(matter.status, set())
+            if status != matter.status and status not in allowed:
+                raise HTTPException(status_code=409, detail=f"Illegal transition {matter.status} -> {status}")
+
             matter.status = status
             matter.next_update_eta_minutes = None if status in {"delivered", "completed"} else matter.next_update_eta_minutes
             matter.deliverable_available = status in {"delivered", "completed"}
@@ -302,6 +316,22 @@ class MatterService:
                 )
                 db.add(matter)
             db.commit()
+
+    def list_events(self, matter_id: str, organisation_id: str):
+        detail = self.get_matter(matter_id, organisation_id)
+        if detail is None:
+            raise HTTPException(status_code=404, detail="Matter not found")
+        return detail.events
+
+    def activity_report(self, organisation_id: str) -> dict:
+        with self._session_factory() as db:
+            rows = db.scalars(
+                select(MatterModel).where(MatterModel.organisation_id == organisation_id)
+            ).all()
+        by_status: dict[str, int] = {}
+        for row in rows:
+            by_status[row.status] = by_status.get(row.status, 0) + 1
+        return {"byStatus": by_status, "total": len(rows)}
 
     def _get_matter_model(self, db: Session, matter_id: str, organisation_id: str) -> MatterModel | None:
         return db.scalar(
