@@ -25,7 +25,8 @@ app.add_middleware(
 def startup() -> None:
     if os.getenv("RUN_MIGRATIONS_ON_STARTUP", "true").lower() == "true":
         run_migrations()
-    matter_service.seed_demo_data()
+    if os.getenv("SEED_DEMO_DATA", "false").lower() == "true":
+        matter_service.seed_demo_data()
 
 
 @app.get("/health")

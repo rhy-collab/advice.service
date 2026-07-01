@@ -4,7 +4,10 @@ import os
 
 import jwt
 from jwt import PyJWKClient
-from fastapi import Header, HTTPException
+from fastapi import Depends, Header, HTTPException
+
+# Roles permitted to approve a matter for delivery.
+ATTORNEY_ROLES = {"attorney", "reviewing_attorney", "admin", "org:admin"}
 
 
 @dataclass(frozen=True)
@@ -14,16 +17,12 @@ class AuthContext:
     name: str
     organisation_id: str
     organisation_name: str
+    role: str = "member"
 
 
 def require_auth_context(authorization: str | None = Header(default=None)) -> AuthContext:
-    """Verify Clerk auth or use explicit local demo auth.
-
-    Local development keeps `CLERK_DEMO_AUTH=true` by default so the API can be
-    exercised before a real Clerk app exists. Production should set
-    `CLERK_DEMO_AUTH=false`, `CLERK_JWKS_URL`, and `CLERK_JWT_ISSUER`.
-    """
-    demo_auth_enabled = os.getenv("CLERK_DEMO_AUTH", "true").lower() == "true"
+    """Verify a Clerk session. Fails closed: demo auth is OFF unless explicitly enabled."""
+    demo_auth_enabled = os.getenv("CLERK_DEMO_AUTH", "false").lower() == "true"
 
     if authorization is None:
         if demo_auth_enabled:
@@ -35,25 +34,36 @@ def require_auth_context(authorization: str | None = Header(default=None)) -> Au
 
     token = authorization.removeprefix("Bearer ").strip()
 
-    if token == "demo" and demo_auth_enabled:
+    if demo_auth_enabled and token == "demo":
         return demo_auth_context()
+    if demo_auth_enabled and token == "demo-attorney":
+        return demo_auth_context(role="attorney")
 
     return verify_clerk_token(token)
 
 
-def demo_auth_context() -> AuthContext:
+def require_attorney_context(auth: AuthContext = Depends(require_auth_context)) -> AuthContext:
+    """Only an attorney/admin may perform attorney actions (e.g. approving delivery)."""
+    if auth.role.lower() not in ATTORNEY_ROLES:
+        raise HTTPException(status_code=403, detail="This action requires an attorney or admin role")
+    return auth
+
+
+def demo_auth_context(role: str = "member") -> AuthContext:
     return AuthContext(
         user_id="user_demo",
         email="founder@example.com",
         name="Founder Example",
         organisation_id="org_demo",
         organisation_name="Acme Labs",
+        role=role,
     )
 
 
 def verify_clerk_token(token: str) -> AuthContext:
     jwks_url = os.getenv("CLERK_JWKS_URL")
     issuer = os.getenv("CLERK_JWT_ISSUER")
+    audience = os.getenv("CLERK_JWT_AUDIENCE")
 
     if not jwks_url or not issuer:
         raise HTTPException(status_code=500, detail="Clerk JWT verification is not configured")
@@ -65,7 +75,8 @@ def verify_clerk_token(token: str) -> AuthContext:
             signing_key.key,
             algorithms=["RS256"],
             issuer=issuer,
-            options={"verify_aud": False},
+            audience=audience if audience else None,
+            options={"verify_aud": bool(audience)},
         )
     except jwt.PyJWTError as exc:
         raise HTTPException(status_code=401, detail="Invalid Clerk token") from exc
@@ -74,12 +85,15 @@ def verify_clerk_token(token: str) -> AuthContext:
     if not organisation_id:
         raise HTTPException(status_code=403, detail="A Clerk organisation is required")
 
+    role = claims.get("org_role") or claims.get("role") or "member"
+
     return AuthContext(
         user_id=claims["sub"],
         email=claims.get("email", ""),
         name=claims.get("name", claims.get("email", "Authenticated user")),
         organisation_id=organisation_id,
         organisation_name=claims.get("org_name", claims.get("org_slug", organisation_id)),
+        role=role,
     )
 
 

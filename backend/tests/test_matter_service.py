@@ -213,3 +213,23 @@ def test_download_rejected_before_attorney_approval(matter_service: MatterServic
         matter_service.delivery_download_url(created.matter_id, "org_demo")
 
     assert exc_info.value.status_code == 409
+
+
+def test_matter_is_isolated_by_organisation(matter_service: MatterService) -> None:
+    from app.schemas.matters import CreateMatterRequest
+
+    created = matter_service.create_matter(
+        CreateMatterRequest(
+            fileName="alpha-secret.docx",
+            serviceTier="standard_redline",
+            contractType="vendor_saas",
+        ),
+        "org_alpha",
+    )
+
+    # A different organisation must not see it.
+    assert matter_service.get_matter(created.matter_id, "org_beta") is None
+    assert all(m.id != created.matter_id for m in matter_service.list_matters("org_beta"))
+
+    # The owning organisation can.
+    assert matter_service.get_matter(created.matter_id, "org_alpha") is not None

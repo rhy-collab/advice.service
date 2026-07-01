@@ -233,7 +233,7 @@ class MatterService:
             if deliverable is None:
                 raise HTTPException(status_code=404, detail="Approved deliverable file not found")
 
-            return f"https://storage.googleapis.com/{deliverable.storage_bucket}/{deliverable.storage_object}"
+            return self._storage.create_download_url(deliverable.storage_bucket, deliverable.storage_object)
 
     def transition_status(
         self,

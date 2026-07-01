@@ -24,6 +24,9 @@ class FakeStorageService:
             mode="demo",
         )
 
+    def create_download_url(self, bucket: str, object_name: str) -> str:
+        return f"https://storage.example.test/download/{object_name}"
+
 
 @pytest.fixture
 def session_factory() -> Iterator[sessionmaker[Session]]:

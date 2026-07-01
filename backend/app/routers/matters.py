@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app.schemas.matters import (
     AssistantMessageRequest,
@@ -14,7 +14,7 @@ from app.schemas.matters import (
     StripeWebhookResponse,
     UploadCompleteResponse,
 )
-from app.services.auth import AuthContext, require_auth_context
+from app.services.auth import AuthContext, require_attorney_context, require_auth_context
 from app.services.checkout_service import checkout_service
 from app.services.matter_service import matter_service
 
@@ -76,7 +76,7 @@ def download_matter(
 def approve_matter(
     matter_id: str,
     request: AttorneyApprovalRequest,
-    auth: AuthContext = Depends(require_auth_context),
+    auth: AuthContext = Depends(require_attorney_context),
 ) -> AttorneyApprovalResponse:
     return AttorneyApprovalResponse(
         matter=matter_service.approve_deliverable(matter_id, auth.organisation_id, request)
