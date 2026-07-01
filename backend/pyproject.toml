@@ -1,0 +1,25 @@
+[project]
+name = "charter-law-backend"
+version = "0.1.0"
+description = "FastAPI backend skeleton for Charter Law"
+requires-python = ">=3.14"
+dependencies = [
+  "alembic>=1.17.2",
+  "fastapi>=0.124.4",
+  "google-cloud-storage>=3.7.0",
+  "pyjwt[crypto]>=2.10.1",
+  "pydantic>=2.12.5",
+  "sqlalchemy>=2.0.45",
+  "stripe>=14.0.1",
+  "uvicorn>=0.38.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=9.0.2",
+  "httpx>=0.28.1",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
