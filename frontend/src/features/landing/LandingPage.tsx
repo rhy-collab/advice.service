@@ -1,8 +1,17 @@
-import { ArrowRight, Building2, FileText, LockKeyhole, UploadCloud } from "lucide-react";
+import { ChangeEvent, FormEvent, useState } from "react";
+import { ArrowRight, Building2, FileSearch, FileText, LockKeyhole, UploadCloud } from "lucide-react";
 import { AssistantCard } from "../../components/AssistantCard";
 import { MatterCard } from "../../components/MatterCard";
 import { SiteHeader } from "../../components/SiteHeader";
 import { matters, pricing, proofPoints } from "../../lib/demoData";
+import {
+  checkContractMistakes,
+  ContractCheckReport,
+  PublicApiState,
+  PublicIntakeRequest,
+  PublicIntakeResponse,
+  submitPublicIntake,
+} from "../../lib/publicApi";
 
 export function LandingPage() {
   return (
@@ -104,6 +113,8 @@ export function LandingPage() {
         </div>
       </section>
 
+      <ContractCheckerSection />
+
       <section className="portal-section" id="portal">
         <div>
           <h2>The client portal starts with predictability.</h2>
@@ -118,18 +129,264 @@ export function LandingPage() {
         </a>
       </section>
 
-      <section className="intake-section" id="intake">
-        <h2>Ready for the first Charter Law intake flow.</h2>
-        <p>
-          The first live version should connect this call to action to Stripe
-          hosted checkout and a lightweight intake form. For now, this is the
-          local landing page for the future public site at charterlaw.services.
-        </p>
-        <a className="primary-action" href="mailto:hello@charterlaw.services">
-          hello@charterlaw.services <ArrowRight aria-hidden="true" size={18} />
-        </a>
-      </section>
+      <IntakeSection />
     </main>
+  );
+}
+
+type IntakeState = "idle" | "submitting" | "submitted" | "error";
+
+const initialIntake: PublicIntakeRequest = {
+  name: "",
+  email: "",
+  company: "",
+  contractType: "vendor_saas",
+  urgency: "standard",
+  serviceTier: "standard_redline",
+  notes: "",
+};
+
+function IntakeSection() {
+  const [intake, setIntake] = useState<PublicIntakeRequest>(initialIntake);
+  const [state, setState] = useState<IntakeState>("idle");
+  const [result, setResult] = useState<{ response: PublicIntakeResponse; source: PublicApiState } | null>(null);
+
+  function updateField<Key extends keyof PublicIntakeRequest>(key: Key, value: PublicIntakeRequest[Key]) {
+    setIntake((current) => ({ ...current, [key]: value }));
+    if (state !== "submitting") {
+      setState("idle");
+    }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setState("submitting");
+
+    try {
+      const response = await submitPublicIntake(intake);
+      setResult(response);
+      setState("submitted");
+    } catch {
+      setState("error");
+    }
+  }
+
+  return (
+    <section className="intake-section" id="intake">
+      <div className="intake-copy">
+        <h2>Send us the contract context first.</h2>
+        <p>
+          This starts a follow-up conversation, not legal advice. Charter Law
+          confirms scope, payment, and the reviewing attorney path before legal
+          work begins.
+        </p>
+      </div>
+      <form className="intake-form" onSubmit={handleSubmit}>
+        <div className="field-grid">
+          <label>
+            <span>Name</span>
+            <input
+              minLength={2}
+              onChange={(event) => updateField("name", event.target.value)}
+              required
+              type="text"
+              value={intake.name}
+            />
+          </label>
+          <label>
+            <span>Work email</span>
+            <input
+              onChange={(event) => updateField("email", event.target.value)}
+              required
+              type="email"
+              value={intake.email}
+            />
+          </label>
+          <label>
+            <span>Company</span>
+            <input
+              minLength={2}
+              onChange={(event) => updateField("company", event.target.value)}
+              required
+              type="text"
+              value={intake.company}
+            />
+          </label>
+          <label>
+            <span>Contract type</span>
+            <select
+              onChange={(event) => updateField("contractType", event.target.value)}
+              value={intake.contractType}
+            >
+              <option value="vendor_saas">Vendor SaaS agreement</option>
+              <option value="mutual_nda">Mutual NDA</option>
+              <option value="customer_msa">Customer MSA</option>
+              <option value="other_commercial">Other commercial contract</option>
+            </select>
+          </label>
+          <label>
+            <span>Review tier</span>
+            <select
+              onChange={(event) => updateField("serviceTier", event.target.value as PublicIntakeRequest["serviceTier"])}
+              value={intake.serviceTier}
+            >
+              <option value="simple_review">Simple review</option>
+              <option value="standard_redline">Standard redline</option>
+              <option value="full_negotiation">Full negotiation</option>
+            </select>
+          </label>
+          <label>
+            <span>Urgency</span>
+            <select
+              onChange={(event) => updateField("urgency", event.target.value as PublicIntakeRequest["urgency"])}
+              value={intake.urgency}
+            >
+              <option value="standard">Standard</option>
+              <option value="rush">Rush</option>
+              <option value="not_sure">Not sure yet</option>
+            </select>
+          </label>
+        </div>
+        <label>
+          <span>What should the reviewing attorney know?</span>
+          <textarea
+            maxLength={4000}
+            onChange={(event) => updateField("notes", event.target.value)}
+            rows={4}
+            value={intake.notes}
+          />
+        </label>
+        <button className="primary-action intake-submit" disabled={state === "submitting"} type="submit">
+          {state === "submitting" ? "Sending..." : "Request review follow-up"}
+          <ArrowRight aria-hidden="true" size={18} />
+        </button>
+        {state === "submitted" && result && (
+          <p className="intake-result">
+            {result.response.message} Reference: {result.response.intakeId}
+            {result.source === "demo" ? " (demo mode)" : ""}.
+          </p>
+        )}
+        {state === "error" && (
+          <p className="intake-result intake-result-error">
+            The intake could not be sent. Email hello@charterlaw.services as a fallback.
+          </p>
+        )}
+      </form>
+    </section>
+  );
+}
+
+type CheckerState = "empty" | "selected" | "checking" | "complete" | "error";
+
+function ContractCheckerSection() {
+  const [file, setFile] = useState<File | null>(null);
+  const [state, setState] = useState<CheckerState>("empty");
+  const [report, setReport] = useState<ContractCheckReport | null>(null);
+  const [source, setSource] = useState<PublicApiState | null>(null);
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFile = event.target.files?.[0] ?? null;
+    setReport(null);
+    setSource(null);
+
+    if (selectedFile === null) {
+      setFile(null);
+      setState("empty");
+      return;
+    }
+
+    setFile(selectedFile);
+    setState(selectedFile.name.toLowerCase().endsWith(".docx") ? "selected" : "error");
+  }
+
+  async function runCheck() {
+    if (file === null || state !== "selected") {
+      return;
+    }
+
+    setState("checking");
+    const result = await checkContractMistakes(file);
+    setReport(result.report);
+    setSource(result.source);
+    setState("complete");
+  }
+
+  return (
+    <section className="checker-section" id="checker">
+      <div className="checker-copy">
+        <span className="checker-label">
+          <FileSearch aria-hidden="true" size={18} /> Free contract mistake checker
+        </span>
+        <h2>Catch obvious contract mistakes before you pay for review.</h2>
+        <p>
+          Drop in a Word document and get a quick preparation-only scan for typos,
+          broken references, unused defined terms, and missing common sections.
+        </p>
+        <p className="privacy-promise">
+          <LockKeyhole aria-hidden="true" size={16} />
+          We never save or store your contract. The checker processes the upload in memory only.
+        </p>
+      </div>
+
+      <div className="checker-tool" aria-label="Free contract mistake checker">
+        <label className="file-picker checker-file-picker">
+          <input type="file" accept=".docx" onChange={handleFileChange} />
+          <span>{file?.name ?? "Choose a .docx contract"}</span>
+        </label>
+        <button
+          className="upload-submit"
+          disabled={state !== "selected"}
+          onClick={runCheck}
+          type="button"
+        >
+          {state === "checking" ? "Checking..." : "Run free check"}
+        </button>
+
+        {state === "empty" && <p className="checker-status">No document selected yet.</p>}
+        {state === "selected" && <p className="checker-status">Ready to check {file?.name}.</p>}
+        {state === "checking" && <p className="checker-status">Checking the document without saving it.</p>}
+        {state === "error" && (
+          <p className="checker-status checker-status-error">Please choose a `.docx` Word document.</p>
+        )}
+        {state === "complete" && report && (
+          <CheckerReport report={report} source={source ?? "demo"} />
+        )}
+      </div>
+    </section>
+  );
+}
+
+function CheckerReport({ report, source }: { report: ContractCheckReport; source: PublicApiState }) {
+  return (
+    <div className="checker-report">
+      <div className="checker-report-header">
+        <div>
+          <strong>{report.fileName}</strong>
+          <span>{report.wordCount.toLocaleString()} words scanned · {source === "api" ? "FastAPI" : "demo"} result</span>
+        </div>
+        <span className={report.stored ? "storage-pill storage-pill-warning" : "storage-pill"}>
+          {report.stored ? "Stored" : "Not stored"}
+        </span>
+      </div>
+      <div className="checker-findings">
+        {report.findings.length === 0 ? (
+          <p>No obvious mechanical issues found. A lawyer should still review legal risk.</p>
+        ) : (
+          report.findings.map((finding, index) => (
+            <article key={`${finding.type}-${index}`} className={`checker-finding checker-finding-${finding.severity}`}>
+              <span>{finding.type.replaceAll("_", " ")}</span>
+              <h3>{finding.title}</h3>
+              <p>{finding.detail}</p>
+              {finding.evidence && <small>Evidence: {finding.evidence}</small>}
+            </article>
+          ))
+        )}
+      </div>
+      <p className="checker-disclaimer">{report.disclaimer}</p>
+      <a className="primary-action checker-cta" href="#intake">
+        Submit for attorney-reviewed redline <ArrowRight aria-hidden="true" size={18} />
+      </a>
+    </div>
   );
 }
 

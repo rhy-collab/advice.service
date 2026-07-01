@@ -4,6 +4,9 @@
 
 ---
 
+## 2026-07-01 — Python 3.12 backend baseline and public lead-gen slice
+Backend packaging is pinned to a production-stable Python 3.12 baseline, with explicit setuptools discovery for `app*` only and CI installing backend test dependencies directly. The next nine-issue batch begins with public lead generation: a no-storage contract checker plus a pre-login intake flow. **Why:** the project needs trustworthy tests before it can move quickly, and Phase 2 requires a stranger to get value and submit interest before the full portal is production-ready.
+
 ## 2026-06-30 — Build system stood up
 Created the compound-engineering build scaffolding (`CLAUDE.md`, issue/PR templates, this log, tooling guide). The issue-driven loop is the operating model: GitHub is the system of record; the AI's chat is disposable. **Why:** so every session starts oriented and lessons compound into the files rather than being lost.
 

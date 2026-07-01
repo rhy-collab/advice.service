@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.db.session import run_migrations
-from app.routers import matters, users
+from app.routers import matters, public, users
 from app.services.matter_service import matter_service
 
 app = FastAPI(title="Charter Law API", version="0.1.0")
@@ -36,3 +36,4 @@ def health() -> dict[str, str]:
 
 app.include_router(users.router, prefix="/v1")
 app.include_router(matters.router, prefix="/v1")
+app.include_router(public.router, prefix="/v1")

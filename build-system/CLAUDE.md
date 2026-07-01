@@ -48,8 +48,11 @@ The `delivered` transition requires a recorded attorney approval. No exceptions.
 Whenever you get something wrong and I correct you, **update this CLAUDE.md so you never make that mistake again** — add a short, specific rule. Keep this file lean (aim under ~200 lines); push long detail into the companion docs and reference it. A bloated memory file stops working.
 
 ## Commands
-*(Fill these in once the repo skeleton exists — exact test / build / lint / run / deploy commands go here. They are the highest-value lines in this file; you use them verbatim.)*
-- Run backend tests: `TBD`
-- Run frontend dev server: `TBD`
-- Lint / format: `TBD`
-- Deploy a preview: `TBD`
+Use Python 3.12 for backend verification. Demo auth is local opt-in only: set `CLERK_DEMO_AUTH=true` for local demos, never as a production default.
+
+- Install backend for CI-style checks: `cd backend && python -m pip install -e . pytest email-validator httpx`
+- Run backend tests: `cd backend && pytest -q`
+- Run frontend dev server: `cd frontend && npm run dev`
+- Build frontend: `cd frontend && npm ci && npm run build`
+- Check whitespace: `git diff --check`
+- Deploy a preview: `TBD once Cloud Run/Vercel/hosting target is wired`

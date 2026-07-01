@@ -5,6 +5,7 @@ from sqlalchemy import StaticPool, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.session import Base
+import app.models.intake  # noqa: F401
 import app.models.matter  # noqa: F401
 from app.services.matter_service import MatterService
 from app.services.storage_service import UploadTargetData
