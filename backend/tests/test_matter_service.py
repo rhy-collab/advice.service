@@ -151,6 +151,30 @@ def test_attorney_approval_requires_upload_and_payment(matter_service: MatterSer
     assert exc_info.value.status_code == 409
 
 
+def test_attorney_approval_requires_review_state(matter_service: MatterService) -> None:
+    from app.schemas.matters import AttorneyApprovalRequest, CreateMatterRequest
+
+    created = matter_service.create_matter(
+        CreateMatterRequest(
+            fileName="paid-but-not-reviewed.docx",
+            serviceTier="standard_redline",
+            contractType="vendor_saas",
+        ),
+        "org_demo",
+    )
+    matter_service.mark_upload_complete(created.matter_id, "org_demo")
+    matter_service.mark_payment_status(created.matter_id, "paid")
+
+    with pytest.raises(HTTPException) as exc_info:
+        matter_service.approve_deliverable(
+            created.matter_id,
+            "org_demo",
+            AttorneyApprovalRequest(deliverableFileName="paid-but-not-reviewed-redline.docx"),
+        )
+
+    assert exc_info.value.status_code == 409
+
+
 def test_attorney_approval_records_deliverable_and_enables_download(
     matter_service: MatterService,
     session_factory: sessionmaker[Session],
@@ -167,6 +191,8 @@ def test_attorney_approval_records_deliverable_and_enables_download(
     )
     matter_service.mark_upload_complete(created.matter_id, "org_demo")
     matter_service.mark_payment_status(created.matter_id, "paid")
+    matter_service.transition_status(created.matter_id, "org_demo", "ai_review")
+    matter_service.transition_status(created.matter_id, "org_demo", "attorney_queue")
 
     delivered = matter_service.approve_deliverable(
         created.matter_id,

@@ -77,6 +77,31 @@ export async function fetchPortalMatters(
   }
 }
 
+export async function fetchAttorneyQueue(
+  getAuthToken?: GetAuthToken,
+): Promise<{ matters: Matter[]; source: PortalApiState }> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/attorney/queue`, {
+      headers: await authHeaders(getAuthToken),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Attorney queue failed: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as MatterListResponse;
+    return {
+      matters: payload.matters.map((matter) => mapApiMatter(matter)),
+      source: "api",
+    };
+  } catch {
+    return {
+      matters: demoMatters.filter((matter) => matter.status === "Attorney Review"),
+      source: "demo",
+    };
+  }
+}
+
 export async function createPortalMatter(
   file: File,
   getAuthToken?: GetAuthToken,
@@ -231,7 +256,7 @@ export async function approveMatterDeliverable(
   }
 
   const deliverableFileName = redlineFileName(matter.file);
-  const response = await fetch(`${API_BASE_URL}/matters/${matter.id}/attorney-approval`, {
+  const response = await fetch(`${API_BASE_URL}/attorney/matters/${matter.id}/approve`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

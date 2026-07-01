@@ -7,13 +7,13 @@ import { PortalPage } from "./features/portal/PortalPage";
 import "./styles.css";
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
-type AppRoute = "admin" | "home" | "portal";
+type AppRoute = "admin" | "attorney" | "home" | "portal";
 
 function App() {
   const route = currentRoute();
 
   if (!clerkPublishableKey) {
-    if (route === "admin") {
+    if (route === "admin" || route === "attorney") {
       return <AdminPage demoMode />;
     }
     return route === "portal" ? <PortalPage demoMode /> : <LandingPage />;
@@ -29,7 +29,7 @@ function App() {
 function AuthenticatedApp({ route }: { route: AppRoute }) {
   const { getToken } = useAuth();
 
-  if (route === "admin") {
+  if (route === "admin" || route === "attorney") {
     return <AdminPage getAuthToken={getToken} />;
   }
 
@@ -42,6 +42,9 @@ function currentRoute(): AppRoute {
   }
   if (window.location.pathname === "/admin") {
     return "admin";
+  }
+  if (window.location.pathname === "/attorney") {
+    return "attorney";
   }
   return "home";
 }

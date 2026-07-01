@@ -4,7 +4,7 @@ import { SiteHeader } from "../../components/SiteHeader";
 import { Matter, matters as fallbackMatters } from "../../lib/demoData";
 import {
   approveMatterDeliverable,
-  fetchPortalMatters,
+  fetchAttorneyQueue,
   GetAuthToken,
   PortalApiState,
 } from "../../lib/portalApi";
@@ -34,7 +34,7 @@ export function AdminPage({
   useEffect(() => {
     let isActive = true;
 
-    fetchPortalMatters(getAuthToken).then((result) => {
+    fetchAttorneyQueue(getAuthToken).then((result) => {
       if (!isActive) {
         return;
       }

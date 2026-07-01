@@ -40,3 +40,29 @@
 
 **Remaining work**
 - None for this issue.
+
+## Issue 3 — Attorney workspace v1
+
+**Status:** Completed
+
+**What changed**
+- Added a dedicated attorney backend router under `/v1/attorney`.
+- Added `GET /v1/attorney/queue` for attorney/admin users to see `attorney_queue` and `attorney_review` matters in their organisation.
+- Added `POST /v1/attorney/matters/{matter_id}/approve` for attorney/admin delivery approval.
+- Removed approval from the customer matter router surface.
+- Tightened approval so a matter must have upload complete, payment paid, and be in `attorney_queue` or `attorney_review`.
+- Added `/attorney` frontend routing and pointed the internal queue UI to the attorney API routes.
+- Updated the API contract and navigation label.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `cd frontend && npm run build`
+- Browser verification at `http://127.0.0.1:5173/attorney`
+
+**Result**
+- Backend: `42 passed, 3 warnings`.
+- Frontend build passed.
+- Browser check showed the attorney delivery queue, `/attorney` nav link, one demo queue row, and no console errors.
+
+**Remaining work**
+- Later batch should build the full cross-organisation attorney workbench model; this first slice scopes attorneys to their active Clerk organisation.

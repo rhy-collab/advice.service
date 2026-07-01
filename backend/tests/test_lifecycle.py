@@ -21,6 +21,24 @@ def test_legal_transition_progresses(matter_service: MatterService) -> None:
     )
 
 
+def test_attorney_queue_lists_only_review_ready_statuses(matter_service: MatterService) -> None:
+    queued = _new(matter_service)
+    review = _new(matter_service)
+    draft = _new(matter_service)
+
+    matter_service.transition_status(queued.matter_id, "org_alpha", "ai_review")
+    matter_service.transition_status(queued.matter_id, "org_alpha", "attorney_queue")
+    matter_service.transition_status(review.matter_id, "org_alpha", "ai_review")
+    matter_service.transition_status(review.matter_id, "org_alpha", "attorney_queue")
+    matter_service.transition_status(review.matter_id, "org_alpha", "attorney_review")
+
+    queue_ids = {matter.id for matter in matter_service.list_attorney_queue("org_alpha")}
+
+    assert queued.matter_id in queue_ids
+    assert review.matter_id in queue_ids
+    assert draft.matter_id not in queue_ids
+
+
 def test_illegal_transition_rejected(matter_service: MatterService) -> None:
     created = _new(matter_service)
     with pytest.raises(HTTPException) as exc_info:

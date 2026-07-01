@@ -54,6 +54,18 @@ class MatterService:
             ).all()
             return [matter_to_summary(row) for row in rows]
 
+    def list_attorney_queue(self, organisation_id: str) -> list[MatterSummary]:
+        with self._session_factory() as db:
+            rows = db.scalars(
+                select(MatterModel)
+                .where(
+                    MatterModel.organisation_id == organisation_id,
+                    MatterModel.status.in_(("attorney_queue", "attorney_review")),
+                )
+                .order_by(MatterModel.submitted_at.asc())
+            ).all()
+            return [matter_to_summary(row) for row in rows]
+
     def create_matter(self, request: CreateMatterRequest, organisation_id: str) -> CreateMatterResponse:
         matter_id = f"matter_{uuid4().hex[:10]}"
         now = datetime.now(timezone.utc)
@@ -204,6 +216,8 @@ class MatterService:
                 raise HTTPException(status_code=409, detail="Source contract upload is required before delivery")
             if matter.payment_status != "paid":
                 raise HTTPException(status_code=409, detail="Payment is required before delivery")
+            if matter.status not in {"attorney_queue", "attorney_review"}:
+                raise HTTPException(status_code=409, detail="Matter must be in attorney review before delivery")
 
             now = datetime.now(timezone.utc)
             matter.status = "delivered"

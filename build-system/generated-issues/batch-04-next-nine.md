@@ -23,11 +23,12 @@
 **Verification:** `pytest -q`.
 **Security/compliance:** No file persistence; no PII leakage. **Files:** `app/routers/public.py`, `app/services/document_checker.py`, new middleware, tests. **Depends on:** —. **Done means:** the public surface is abuse-resistant.
 
-## Issue 3 — Attorney workspace v1 ⬜
+## Issue 3 — Attorney workspace v1 ✅
 **Objective:** An attorney-only queue + minimal attorney UI; move approval fully into the attorney surface.
 **Why:** Closes the review gap — approval should not live in the customer API.
 **Scope:** `GET /v1/attorney/queue` (attorney/admin only: matters in `attorney_queue`/`attorney_review`); a minimal attorney page listing the queue with an Approve action; keep `require_attorney_context`; consider firm-vs-client org scoping.
 **Acceptance:** Non-attorneys get 403; attorneys see the queue; approve moves to `delivered`.
+**Current status:** Dedicated `/v1/attorney/queue` and `/v1/attorney/matters/{id}/approve` routes are implemented; `/attorney` renders the attorney queue; approval requires attorney/admin role, upload, payment, and attorney queue/review state.
 **Verification:** `pytest -q`; `npm run build`.
 **Security/compliance:** Attorney-role enforced; org/firm scoping. **Files:** `app/routers/attorney.py`, `frontend` or `attorney-app`, tests. **Depends on:** 1. **Done means:** attorneys action their queue in a dedicated surface.
 

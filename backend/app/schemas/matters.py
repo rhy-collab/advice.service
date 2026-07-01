@@ -50,6 +50,10 @@ class MatterListResponse(BaseModel):
     matters: list[MatterSummary]
 
 
+class AttorneyQueueResponse(BaseModel):
+    matters: list[MatterSummary]
+
+
 class CreateMatterRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
