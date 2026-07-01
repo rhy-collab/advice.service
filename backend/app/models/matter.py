@@ -42,6 +42,11 @@ class MatterModel(Base):
         cascade="all, delete-orphan",
         order_by="MatterAIFeedbackModel.created_at",
     )
+    draft_deliverables: Mapped[list["MatterDraftDeliverableModel"]] = relationship(
+        back_populates="matter",
+        cascade="all, delete-orphan",
+        order_by="MatterDraftDeliverableModel.created_at",
+    )
 
 
 class MatterEventModel(Base):
@@ -98,3 +103,21 @@ class MatterAIFeedbackModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     matter: Mapped[MatterModel] = relationship(back_populates="ai_feedback")
+
+
+class MatterDraftDeliverableModel(Base):
+    __tablename__ = "matter_draft_deliverables"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    matter_id: Mapped[str] = mapped_column(ForeignKey("matters.id", ondelete="CASCADE"), index=True)
+    redline_file_name: Mapped[str] = mapped_column(String(512))
+    redline_storage_bucket: Mapped[str] = mapped_column(String(256))
+    redline_storage_object: Mapped[str] = mapped_column(String(1024))
+    cover_letter_file_name: Mapped[str] = mapped_column(String(512))
+    cover_letter_storage_bucket: Mapped[str] = mapped_column(String(256))
+    cover_letter_storage_object: Mapped[str] = mapped_column(String(1024))
+    cover_letter_body: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(64), default="internal_only")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    matter: Mapped[MatterModel] = relationship(back_populates="draft_deliverables")

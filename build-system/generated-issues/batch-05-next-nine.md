@@ -33,11 +33,12 @@
 **Verification:** `pytest -q`.
 **Security/compliance:** Attorney-role only. **Files:** `app/routers/attorney.py`, `app/services/playbook_service.py`, `app/services/matter_service.py`, migration, tests. **Depends on:** 2. **Done means:** corrections compound into the playbook.
 
-## Issue 4 — Over-inclusive redline + cover-letter deliverable ⬜
+## Issue 4 — Over-inclusive redline + cover-letter deliverable ✅
 **Objective:** Generate an internal-only first-pass redline + the "what changed / why risky / your fallback" cover letter.
 **Why:** The cover letter is the heart of the standard tier; the redline is the core work product.
 **Scope:** Produce a tracked-changes redline via a Word-add-in boundary (stub the add-in call, real path behind config); generate the cover letter from the issue list; tune for recall (over-inclusive). Internal-only until approval.
 **Acceptance:** Redline + cover letter generated and stored internally; never customer-visible pre-approval; tested.
+**Current status:** Upload completion now creates an internal-only draft deliverable record with a stubbed redline object path and cover-letter body generated from the issue list; client download still requires attorney-approved delivery.
 **Verification:** `pytest -q`.
 **Security/compliance:** Internal-only enforced server-side. **Files:** `app/services/ai_prep_service.py`, redline boundary module, schema, migration, tests. **Depends on:** 2. **Done means:** the full internal work product exists.
 

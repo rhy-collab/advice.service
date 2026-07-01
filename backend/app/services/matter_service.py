@@ -7,7 +7,14 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.session import SessionLocal
-from app.models.matter import MatterAIFeedbackModel, MatterAIPrepModel, MatterEventModel, MatterFileModel, MatterModel
+from app.models.matter import (
+    MatterAIFeedbackModel,
+    MatterAIPrepModel,
+    MatterDraftDeliverableModel,
+    MatterEventModel,
+    MatterFileModel,
+    MatterModel,
+)
 from app.schemas.ai import AIPrepFeedbackRequest, AIPrepFeedbackResponse, AIPrepResult
 from app.schemas.matters import (
     AttorneyApprovalRequest,
@@ -22,6 +29,7 @@ from app.schemas.matters import (
     demo_expiry,
 )
 from app.services.ai_prep_service import ai_prep_service, issues_from_json, issues_to_json
+from app.services.deliverable_service import DeliverableService, deliverable_service
 from app.services.notifications import NotificationService, notification_service
 from app.services.playbook_service import PlaybookService
 from app.services.storage_service import StorageService, storage_service
@@ -44,12 +52,14 @@ class MatterService:
         storage: StorageService = storage_service,
         notifications: NotificationService = notification_service,
         playbooks: PlaybookService | None = None,
+        deliverables: DeliverableService = deliverable_service,
         seed_demo: bool = False,
     ) -> None:
         self._session_factory = session_factory
         self._storage = storage
         self._notifications = notifications
         self._playbooks = playbooks or PlaybookService(session_factory)
+        self._deliverables = deliverables
         if seed_demo:
             self.seed_demo_data()
 
@@ -176,6 +186,20 @@ class MatterService:
                         mode=prep.mode,
                         summary=prep.summary,
                         issues_json=issues_to_json(prep.issues),
+                        created_at=datetime.now(timezone.utc),
+                    )
+                )
+                draft = self._deliverables.generate_internal_draft(matter.id, matter.file_name, prep.issues)
+                matter.draft_deliverables.append(
+                    MatterDraftDeliverableModel(
+                        redline_file_name=draft.redline_file_name,
+                        redline_storage_bucket=self._storage.bucket_name(),
+                        redline_storage_object=draft.redline_storage_object,
+                        cover_letter_file_name=draft.cover_letter_file_name,
+                        cover_letter_storage_bucket=self._storage.bucket_name(),
+                        cover_letter_storage_object=draft.cover_letter_storage_object,
+                        cover_letter_body=draft.cover_letter_body,
+                        status="internal_only",
                         created_at=datetime.now(timezone.utc),
                     )
                 )

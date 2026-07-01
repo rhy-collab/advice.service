@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
-from app.models.matter import MatterAIPrepModel, MatterFileModel
+from app.models.matter import MatterAIPrepModel, MatterDraftDeliverableModel, MatterFileModel
 from app.schemas.playbook import PlaybookCheckCreate, PlaybookCreate
 from app.services.matter_service import MatterService
 from app.services.playbook_service import PlaybookService
@@ -283,6 +283,41 @@ def test_upload_completion_uses_matching_playbook_checks(
     assert prep.issues[0].title == "Check liability cap"
     assert prep.issues[0].playbook_check_key == "liability_cap"
     assert prep.issues[0].playbook_check_id is not None
+
+
+def test_upload_completion_creates_internal_draft_deliverables(
+    matter_service: MatterService,
+    session_factory: sessionmaker[Session],
+) -> None:
+    from app.schemas.matters import CreateMatterRequest
+
+    created = matter_service.create_matter(
+        CreateMatterRequest(
+            fileName="draft-work-product.docx",
+            serviceTier="standard_redline",
+            contractType="vendor_saas",
+        ),
+        "org_demo",
+    )
+
+    matter_service.mark_upload_complete(created.matter_id, "org_demo")
+
+    with session_factory() as db:
+        draft = db.scalar(
+            select(MatterDraftDeliverableModel).where(MatterDraftDeliverableModel.matter_id == created.matter_id)
+        )
+
+    assert draft is not None
+    assert draft.status == "internal_only"
+    assert draft.redline_file_name == "draft-work-product-internal-redline.docx"
+    assert draft.redline_storage_object.endswith("/internal/draft-work-product-internal-redline.docx")
+    assert draft.cover_letter_file_name == "draft-work-product-cover-letter.txt"
+    assert "Key changes and risk rationale" in draft.cover_letter_body
+
+    with pytest.raises(HTTPException) as exc_info:
+        matter_service.delivery_download_url(created.matter_id, "org_demo")
+
+    assert exc_info.value.status_code == 409
 
 
 def test_ai_prep_is_org_scoped(matter_service: MatterService) -> None:

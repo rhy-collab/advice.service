@@ -72,3 +72,27 @@
 
 **Remaining work**
 - The frontend workbench in Issue 7 should call this endpoint from Apply/Dismiss/Edit controls.
+
+## Issue 4 — Over-inclusive redline + cover-letter deliverable
+
+**Status:** Completed
+
+**What changed**
+- Added `matter_draft_deliverables` storage for internal work product.
+- Added a deliverable-generation service that creates internal redline and cover-letter object paths.
+- Cover-letter body is generated from the AI-prep issue list and keeps the output attorney-only.
+- Upload completion now creates the internal draft deliverable after AI prep.
+- Added tests proving draft creation and preserving the pre-approval customer download block.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+- `npm run build`
+- `git diff --check`
+
+**Result**
+- Backend tests passed: 56 passed, 3 existing warnings.
+- Frontend production build passed.
+- Whitespace check passed.
+
+**Remaining work**
+- Replace the redline stub boundary with a real Word add-in or document-generation worker when that infrastructure exists.
