@@ -22,6 +22,7 @@ from app.schemas.matters import (
     demo_expiry,
 )
 from app.services.ai_prep_service import ai_prep_service, issues_from_json, issues_to_json
+from app.services.notifications import NotificationService, notification_service
 from app.services.storage_service import StorageService, storage_service
 
 
@@ -40,10 +41,12 @@ class MatterService:
         self,
         session_factory: Callable[[], Session] | sessionmaker[Session] = SessionLocal,
         storage: StorageService = storage_service,
+        notifications: NotificationService = notification_service,
         seed_demo: bool = False,
     ) -> None:
         self._session_factory = session_factory
         self._storage = storage
+        self._notifications = notifications
         if seed_demo:
             self.seed_demo_data()
 
@@ -274,6 +277,7 @@ class MatterService:
             )
             db.commit()
             db.refresh(matter)
+            self._notifications.notify_status_change(matter.id, organisation_id, "delivered")
             return matter_to_summary(matter)
 
     def delivery_download_url(self, matter_id: str, organisation_id: str) -> str:
@@ -322,6 +326,8 @@ class MatterService:
             )
             db.commit()
             db.refresh(matter)
+            if status == "delivered":
+                self._notifications.notify_status_change(matter.id, organisation_id, "delivered")
             return matter_to_summary(matter)
 
     def seed_demo_data(self) -> None:

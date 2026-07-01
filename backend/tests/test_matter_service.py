@@ -169,6 +169,7 @@ def test_attorney_approval_records_deliverable_and_enables_download(
     )
     matter_service.mark_upload_complete(created.matter_id, "org_demo")
     matter_service.mark_payment_status(created.matter_id, "paid")
+    notifications_before = len(matter_service._notifications.sent_notifications)
 
     delivered = matter_service.approve_deliverable(
         created.matter_id,
@@ -184,6 +185,12 @@ def test_attorney_approval_records_deliverable_and_enables_download(
     assert download_url.endswith(f"/matters/{created.matter_id}/deliverables/ready-contract-redline.docx")
     assert detail is not None
     assert any(event.type == "attorney_approved" for event in detail.events)
+    notification = matter_service._notifications.sent_notifications[-1]
+    assert len(matter_service._notifications.sent_notifications) == notifications_before + 1
+    assert notification.status == "delivered"
+    assert notification.channel == "log"
+    assert "ready-contract" not in notification.subject
+    assert "ready-contract" not in notification.body
 
     with session_factory() as db:
         deliverable = db.scalar(

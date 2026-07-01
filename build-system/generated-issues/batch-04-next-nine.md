@@ -59,11 +59,12 @@
 **Verification:** `pytest -q`.
 **Security/compliance:** none. **Files:** `app/models/playbook.py`, `app/services/playbook_service.py`, migration, tests. **Depends on:** —. **Done means:** the playbook is a first-class, structured system.
 
-## Issue 7 — Status-change notifications ⬜
+## Issue 7 — Status-change notifications ✅
 **Objective:** Email the customer on key transitions (especially `delivered`).
 **Why:** Predictability + "your review is ready."
 **Scope:** A notification service behind an env-configured provider (log/no-op stub when unset); fire on transitions; org-scoped; no document contents in emails.
 **Acceptance:** A `delivered` transition triggers a notification (stub logs it); tested.
+**Current status:** Delivered approvals and delivered transitions trigger a notification service using a log/no-op fallback unless `RESEND_API_KEY` is configured; messages include no document contents.
 **Verification:** `pytest -q`.
 **Security/compliance:** No confidential content in notifications. **Files:** `app/services/notifications.py`, hook in `matter_service`, tests. **Depends on:** —. **Done means:** customers are notified on progress.
 

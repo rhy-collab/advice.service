@@ -125,3 +125,22 @@
 
 **Remaining work**
 - Wire the AI prep engine to consume these checks in a later issue.
+
+## Issue 7 — Status-change notifications
+
+**Status:** Completed
+
+**What changed**
+- Added `NotificationService` with an email/log channel boundary.
+- Added a safe log fallback when `RESEND_API_KEY` is unset.
+- Triggered a notification when a matter is delivered by attorney approval or delivered status transition.
+- Kept notification subject/body free of document contents and filenames.
+
+**Commands run**
+- `/tmp/charter-law-backend-ci-venv/bin/python -m pytest -q`
+
+**Result**
+- Backend tests pass.
+
+**Remaining work**
+- Wire a real email provider once the account and verified sender/domain exist.
