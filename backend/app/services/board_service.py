@@ -337,6 +337,12 @@ class BoardService:
             tier = (verdict.price_tier if verdict else None) or "standard"
             budget, hours = PRICE_TIER_TABLE.get(tier, PRICE_TIER_TABLE["standard"])
             hours_hi = float(hours.split("–")[-1])
+
+            if os.getenv("ANTHROPIC_API_KEY"):
+                profile = self._get_or_create_profile(db, thread.organisation_id)
+                generated = self._claude_adviser_matches(thread, profile, verdict, hours, hours_hi)
+                if generated:
+                    return AdviserQuotesResponse(domain=thread.domain, quotes=generated)
             self._seed_advisers_if_empty(db)
             advisers = db.execute(
                 select(AdviserModel).where(AdviserModel.domain == thread.domain)
@@ -785,6 +791,61 @@ class BoardService:
                 "dissent": str(data.get("dissent") or ""),
                 "validation_plan": str(data.get("validation_plan") or ""),
             }
+        except Exception:
+            return None
+
+    def _claude_adviser_matches(
+        self,
+        thread: ProblemThreadModel,
+        profile: FounderContextProfileModel,
+        verdict: VerdictModel | None,
+        hours: str,
+        hours_hi: float,
+    ) -> list[AdviserQuote] | None:
+        """Generate ~10 matched adviser profiles for this exact problem (demo marketplace).
+
+        Profiles are AI-generated placeholders standing in for the real recruited
+        San Francisco adviser pool described in the roadmap (§3 item 6).
+        """
+        ruling = verdict.ruling if verdict else "(no verdict yet)"
+        out = self._claude(
+            "You generate a marketplace shortlist of expert advisers for a founder-advisory product. "
+            "Create exactly 10 fictional but deeply credible individual advisers perfectly matched to "
+            "the founder's specific problem, context, and their board's verdict. They must read as "
+            "genuinely impressive domain experts (named operators, ex-companies, concrete track "
+            "records) — no titled roles like 'Legal Lead', just real-sounding people. Vary seniority "
+            "and hourly rates ($150–$500). Reply ONLY with a JSON array of 10 objects with keys: "
+            "name, title (their real-world credential line, e.g. 'ex-Stripe pricing lead'), "
+            "hourly_rate (integer), why_fit (ONE sentence, second person, referencing the founder's "
+            "actual problem and numbers — why this specific person is the right match). No markdown.",
+            f"Problem: {thread.problem_text}\nFounder context: {self._context_line(profile)}\n"
+            f"Board verdict: {ruling[:600]}",
+            max_tokens=1800,
+        )
+        if not out:
+            return None
+        try:
+            data = json.loads(out[out.index("[") : out.rindex("]") + 1])
+            quotes: list[AdviserQuote] = []
+            for item in data[:10]:
+                rate = int(item.get("hourly_rate") or 250)
+                total = int(rate * hours_hi * (100 + PLATFORM_FEE_PCT) / 100)
+                quotes.append(
+                    AdviserQuote(
+                        adviser_id=_new_id("adviser"),
+                        name=str(item.get("name") or "Adviser"),
+                        title=str(item.get("title") or ""),
+                        metro="San Francisco",
+                        hourly_rate=rate,
+                        skills_profile=str(item.get("title") or ""),
+                        why_fit=str(item.get("why_fit") or ""),
+                        estimated_hours=hours,
+                        estimated_total=total,
+                        platform_fee_pct=PLATFORM_FEE_PCT,
+                        not_to_exceed=total,
+                    )
+                )
+            return quotes if len(quotes) >= 5 else None
         except Exception:
             return None
 

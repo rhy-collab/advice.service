@@ -216,17 +216,17 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
 
               {quotes && (
                 <div className="th-quotes">
-                  <h2>Matched advisers — {DOMAIN_LABELS[quotes.domain] ?? quotes.domain}</h2>
+                  <h2>Your matched advisers — {DOMAIN_LABELS[quotes.domain] ?? quotes.domain}</h2>
                   <p className="th-quotes-note">
-                    Real individuals, ranked for this exact problem. Each sets their own rate; the estimate shown is a not-to-exceed cap
-                    (includes the {quotes.quotes[0]?.platform_fee_pct ?? 10}% platform fee).
+                    Matched to this exact problem from your board's full context. Each sets their own rate; the estimate shown is a
+                    not-to-exceed cap (includes the {quotes.quotes[0]?.platform_fee_pct ?? 10}% platform fee).
                   </p>
                   {quotes.quotes.map((quote) => (
                     <article key={quote.adviser_id} className="th-quote">
                       <div>
-                        <h3>{quote.name}</h3>
+                        <h3>{quote.name}{quote.title ? <span className="th-quote-title"> — {quote.title}</span> : null}</h3>
                         <p className="th-quote-meta">{quote.metro} · ${quote.hourly_rate}/hr · est. {quote.estimated_hours} hrs</p>
-                        <p>{quote.skills_profile}</p>
+                        <p>{quote.why_fit || quote.skills_profile}</p>
                       </div>
                       <div className="th-quote-price">
                         <span>${quote.estimated_total}</span>

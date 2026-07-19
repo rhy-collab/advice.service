@@ -63,9 +63,11 @@ export type ThreadDetail = {
 export type AdviserQuote = {
   adviser_id: string;
   name: string;
+  title: string;
   metro: string;
   hourly_rate: number;
   skills_profile: string;
+  why_fit: string;
   estimated_hours: string;
   estimated_total: number;
   platform_fee_pct: number;

@@ -99,9 +99,11 @@ class AdviserQuote(BaseModel):
 
     adviser_id: str
     name: str
+    title: str = ""
     metro: str
     hourly_rate: int
     skills_profile: str
+    why_fit: str = ""
     estimated_hours: str
     estimated_total: int
     platform_fee_pct: int

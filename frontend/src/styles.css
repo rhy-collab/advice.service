@@ -2240,3 +2240,4 @@ nav a:hover {
 .th-msg-chair p { background: #f4f1fb; border-radius: 10px; padding: 12px 16px; }
 .th-msg-chair .th-msg-name { color: #5b46a8; }
 .th-typing { color: #6b7075; font-style: italic; }
+.th-quote-title { font-weight: 600; color: #6b7075; font-size: 13px; }
