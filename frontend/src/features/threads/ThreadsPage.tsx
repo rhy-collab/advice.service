@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AdviserQuotesResponse,
-  ContextProfile,
   GetAuthToken,
   ThreadDetail,
   ThreadSummary,
@@ -10,7 +9,6 @@ import {
   getThread,
   listThreads,
   postMessage,
-  updateContext,
 } from "../../lib/threadsApi";
 
 const DOMAIN_LABELS: Record<string, string> = {
@@ -23,19 +21,21 @@ const DOMAIN_LABELS: Record<string, string> = {
   engineering: "Developer / engineering",
 };
 
-const ROUND_TITLES: Record<number, string> = {
-  1: "Round 1 — Context",
-  2: "Round 2 — Problem definition & triage",
-  3: "Round 3 — Domain board",
-};
-
-const CONTEXT_FIELDS: { key: keyof ContextProfile; label: string; placeholder: string }[] = [
-  { key: "users_customers", label: "Users / customers today", placeholder: "e.g. 120 paying customers" },
-  { key: "revenue_or_funding_stage", label: "MRR or funding stage", placeholder: "e.g. $8k MRR, pre-seed" },
-  { key: "customer_profile", label: "Who exactly is the customer?", placeholder: "e.g. seed-stage B2B founders" },
-  { key: "team_size", label: "Team size", placeholder: "e.g. 3 — two engineers and me" },
-  { key: "goals", label: "What does success look like?", placeholder: "e.g. $25k MRR in 6 months" },
-];
+function speaker(role: string): { name: string; kind: string } {
+  if (role.startsWith("advisor:")) return { name: role.slice(8), kind: "advisor" };
+  switch (role) {
+    case "founder":
+      return { name: "You", kind: "founder" };
+    case "agent":
+      return { name: "Perfect Agent", kind: "agent" };
+    case "board":
+      return { name: "The Board", kind: "board" };
+    case "chair":
+      return { name: "The Chair", kind: "chair" };
+    default:
+      return { name: "System", kind: "system" };
+  }
+}
 
 export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
@@ -46,7 +46,6 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
   const [quotes, setQuotes] = useState<AdviserQuotesResponse | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [contextDraft, setContextDraft] = useState<Partial<ContextProfile>>({});
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
   const refreshThreads = useCallback(async () => {
@@ -102,16 +101,6 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
     }
   }
 
-  async function handleContextSubmit() {
-    if (!active) return;
-    const detail = await guarded(() => updateContext(active.id, contextDraft, getAuthToken));
-    if (detail) {
-      setActive(detail);
-      setContextDraft({});
-      void refreshThreads();
-    }
-  }
-
   async function handleSend() {
     if (!active || !composerText.trim()) return;
     if (composerMode === "adviser") {
@@ -129,7 +118,12 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
     );
     const response = await guarded(() => postMessage(active.id, content, getAuthToken));
     if (response) {
-      setActive((prev) => (prev ? { ...prev, messages: [...prev.messages, response.reply] } : prev));
+      // Rounds may have posted many messages (deliberation) — fetch the full thread.
+      const detail = await guarded(() => getThread(active.id, getAuthToken));
+      if (detail) {
+        setActive(detail);
+        void refreshThreads();
+      }
     }
   }
 
@@ -186,83 +180,23 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
                 <p>{active.problem_text}</p>
               </div>
 
-              {latestPerRound(active.boards).map((board) => (
-                <section key={board.id} className="th-round">
-                  <header>
-                    <h2>{ROUND_TITLES[board.round] ?? `Round ${board.round}`}</h2>
-                    {board.round === 3 && board.domain && (
-                      <span className="th-domain-chip">{DOMAIN_LABELS[board.domain] ?? board.domain}</span>
-                    )}
-                  </header>
-
-                  {board.round === 3 && (
-                    <div className="th-positions">
-                      {board.positions.map((p) => (
-                        <article key={p.advisor_name} className="th-position">
-                          <h3>{p.advisor_name}</h3>
-                          <p className="th-persona">{p.persona}</p>
-                          <p>{p.position}</p>
-                          {p.cross_examination && (
-                            <p className="th-crossexam"><strong>Cross-examination:</strong> {p.cross_examination}</p>
-                          )}
-                        </article>
-                      ))}
-                    </div>
-                  )}
-                  {board.round !== 3 &&
-                    board.positions.map((p) => (
-                      <p key={p.advisor_name} className="th-round-line">
-                        <strong>{p.advisor_name}:</strong> {p.position}
-                      </p>
-                    ))}
-
-                  {board.verdict && (
-                    <div className="th-verdict">
-                      <p><strong>{board.round === 3 ? "Chair's ruling:" : "Verdict:"}</strong> {board.verdict.ruling}</p>
-                      {board.verdict.assumptions.length > 0 && (
-                        <ul>
-                          {board.verdict.assumptions.map((a) => (
-                            <li key={a}>{a}</li>
-                          ))}
-                        </ul>
-                      )}
-                      {board.verdict.dissent && (
-                        <p className="th-dissent"><strong>Preserved dissent:</strong> {board.verdict.dissent}</p>
-                      )}
-                      {board.verdict.validation_plan && (
-                        <p><strong>Validation plan:</strong> {board.verdict.validation_plan}</p>
-                      )}
-                    </div>
-                  )}
-
-                  {board.round === 1 && active.status === "context_pending" && board.verdict && (
-                    <div className="th-context-form">
-                      {CONTEXT_FIELDS.map((field) => (
-                        <label key={field.key}>
-                          {field.label}
-                          <input
-                            value={(contextDraft[field.key] ?? active.context_profile[field.key] ?? "") as string}
-                            placeholder={field.placeholder}
-                            onChange={(e) =>
-                              setContextDraft((prev) => ({ ...prev, [field.key]: e.target.value }))
-                            }
-                          />
-                        </label>
-                      ))}
-                      <button className="th-primary" disabled={busy} onClick={() => void handleContextSubmit()}>
-                        {busy ? "Re-convening…" : "Submit context — continue to Rounds 2–3"}
-                      </button>
-                    </div>
-                  )}
-                </section>
-              ))}
-
-              {active.messages.map((message, index) => (
-                <div key={index} className={`th-msg th-msg-${message.role}`}>
-                  <span className="th-msg-name">{message.role === "agent" ? "Perfect Agent" : message.role === "founder" ? "You" : "System"}</span>
-                  <p>{message.content}</p>
+              {active.domain && (
+                <div className="th-round">
+                  <span className="th-domain-chip">{DOMAIN_LABELS[active.domain] ?? active.domain}</span>
                 </div>
-              ))}
+              )}
+
+              {active.messages.map((message, index) => {
+                const who = speaker(message.role);
+                return (
+                  <div key={index} className={`th-msg th-msg-${who.kind}`}>
+                    <span className="th-msg-name">{who.name}</span>
+                    <p>{message.content}</p>
+                  </div>
+                );
+              })}
+
+              {busy && <div className="th-msg th-msg-board"><span className="th-msg-name">The Board</span><p className="th-typing">deliberating…</p></div>}
 
               {quotes && (
                 <div className="th-quotes">
@@ -302,7 +236,7 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
                   composerMode === "agent"
                     ? active.status === "agent_ready"
                       ? "Ask your perfect agent about this problem…"
-                      : "Answer the context questions above to convene Rounds 2–3…"
+                      : "Answer the board — users, MRR or stage, customer, team, goals…"
                     : "Describe what you need — send to see your matched advisers…"
                 }
                 rows={2}
@@ -335,14 +269,6 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
       </main>
     </div>
   );
-}
-
-function latestPerRound(boards: ThreadDetail["boards"]): ThreadDetail["boards"] {
-  const byRound = new Map<number, ThreadDetail["boards"][number]>();
-  for (const board of boards) {
-    byRound.set(board.round, board); // boards arrive ordered; last one per round wins
-  }
-  return [...byRound.values()].sort((a, b) => a.round - b.round);
 }
 
 function statusLabel(status: string): string {

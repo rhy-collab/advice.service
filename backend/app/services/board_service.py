@@ -138,6 +138,12 @@ def _new_id(prefix: str) -> str:
     return f"{prefix}_{uuid4().hex[:12]}"
 
 
+def _post(db: Session, thread: ProblemThreadModel, role: str, content: str) -> None:
+    """Append a conversational message to the thread. role: founder | agent | board | chair | advisor:<Name>."""
+    db.add(ThreadMessageModel(thread_id=thread.id, role=role, content=content))
+    db.flush()
+
+
 class BoardService:
     def __init__(
         self,
@@ -224,7 +230,26 @@ class BoardService:
             thread = self._get_thread(db, thread_id, organisation_id)
             if thread is None:
                 return None
-            db.add(ThreadMessageModel(thread_id=thread.id, role="founder", content=content))
+            _post(db, thread, "founder", content)
+
+            if thread.status == "context_pending":
+                # Conversational Round 1: treat the founder's message as context answers.
+                profile = self._get_or_create_profile(db, thread.organisation_id)
+                self._absorb_context_message(db, profile, content)
+                self._run_round1(db, thread, profile, rerun=True)
+                if thread.status != "context_pending" and thread.domain is None:
+                    self._run_round2(db, thread, profile)
+                    self._run_round3(db, thread, profile)
+                reply = thread.messages[-1] if thread.messages else None
+                db.commit()
+                return PostMessageResponse(
+                    reply=ThreadMessage(
+                        role=reply.role if reply else "board",
+                        content=reply.content if reply else "",
+                        created_at=reply.created_at.isoformat() if reply and reply.created_at else "",
+                    )
+                )
+
             reply_text = self._perfect_agent_reply(db, thread, content)
             reply = ThreadMessageModel(thread_id=thread.id, role="agent", content=reply_text)
             db.add(reply)
@@ -237,6 +262,43 @@ class BoardService:
                     created_at=reply.created_at.isoformat() if reply.created_at else "",
                 )
             )
+
+    def _absorb_context_message(
+        self, db: Session, profile: FounderContextProfileModel, message: str
+    ) -> None:
+        """Map a free-text founder message onto the context profile fields."""
+        fields = (
+            "users_customers",
+            "revenue_or_funding_stage",
+            "customer_profile",
+            "team_size",
+            "goals",
+        )
+        if os.getenv("ANTHROPIC_API_KEY"):
+            out = self._claude(
+                "Extract founder business context from the message. Reply ONLY with JSON using any of "
+                "these keys (omit keys the message says nothing about): users_customers, "
+                "revenue_or_funding_stage, customer_profile, team_size, goals. Values are short strings "
+                "quoting the founder's own facts.",
+                message,
+                max_tokens=300,
+            )
+            if out:
+                try:
+                    data = json.loads(out[out.index("{") : out.rindex("}") + 1])
+                    for key in fields:
+                        value = data.get(key)
+                        if value and str(value).strip():
+                            setattr(profile, key, str(value).strip())
+                    db.flush()
+                    return
+                except Exception:
+                    pass
+        # Deterministic fallback: fill every still-missing field with the founder's words.
+        for key in fields:
+            if not (getattr(profile, key) or "").strip():
+                setattr(profile, key, message.strip())
+        db.flush()
 
     # ------------------------------------------------------- adviser matching
 
@@ -310,6 +372,14 @@ class BoardService:
             )
             questions: list[str] = []
             thread.status = "triage"
+            _post(
+                db,
+                thread,
+                "board",
+                "Round 1 — Context. We already hold your business-context profile ("
+                + self._context_line(profile)
+                + "), so the board is satisfied it understands your startup. Moving straight to triage.",
+            )
         else:
             ruling = (
                 "The board is not yet satisfied it fully understands this startup — proceeding on a "
@@ -317,6 +387,15 @@ class BoardService:
             )
             questions = [f"Tell us {m}." for m in missing]
             thread.status = "context_pending"
+            _post(
+                db,
+                thread,
+                "board",
+                "Round 1 — Context. Before we debate anything, we need to actually understand your "
+                "startup — answering on a thin profile would be guesswork dressed as analysis. "
+                "Tell us, right here in the chat: " + "; ".join(missing) + ". "
+                "One message covering whatever you know is fine — we'll ask again if anything's missing.",
+            )
         db.add(
             VerdictModel(
                 board_id=board.id,
@@ -376,6 +455,15 @@ class BoardService:
         )
         thread.domain = domain
         thread.status = "panel"
+        _post(
+            db,
+            thread,
+            "board",
+            "Round 2 — Problem definition & triage. "
+            + self._round2_reasoning(thread.problem_text, domain)
+            + f" Routed to: {DOMAIN_LABELS[domain]}. If that framing misses what you're actually "
+            "worried about, say so and we'll re-route before the panel convenes.",
+        )
         db.flush()
 
     def _route_domain(self, problem_text: str, profile: FounderContextProfileModel) -> str:
@@ -410,6 +498,16 @@ class BoardService:
         db.add(board)
         db.flush()
 
+        _post(
+            db,
+            thread,
+            "board",
+            f"Round 3 — Domain board. Convening your {DOMAIN_LABELS[domain]} panel: "
+            + ", ".join(name for name, _ in panel)
+            + ". Each drafts an independent position first — none of them sees the others' work "
+            "until cross-examination.",
+        )
+
         # Independent first drafts (invariant 3): each position is produced without
         # sight of any other advisor's output.
         positions = self._independent_positions(thread, profile, panel)
@@ -420,12 +518,16 @@ class BoardService:
             )
             db.add(row)
             rows.append(row)
+            _post(db, thread, f"advisor:{name}", position)
         db.flush()
+
+        _post(db, thread, "board", "Positions are in. One round of cross-examination — attack the weakest rival, concede what's stronger.")
 
         # One round of cross-examination — now (and only now) each sees the others.
         for i, row in enumerate(rows):
             others = [(r.advisor_name, r.position) for j, r in enumerate(rows) if j != i]
             row.cross_examination = self._cross_examination(row.advisor_name, row.position, others)
+            _post(db, thread, f"advisor:{row.advisor_name}", row.cross_examination)
 
         tier = self._price_tier(thread.problem_text)
         cost, hours = PRICE_TIER_TABLE[tier]
@@ -444,15 +546,22 @@ class BoardService:
             )
         )
         thread.status = "agent_ready"
-        db.add(
-            ThreadMessageModel(
-                thread_id=thread.id,
-                role="agent",
-                content=(
-                    "Your panel has ruled. I’m the advisor synthesized from its debate — ask me anything "
-                    "about the verdict, the dissent, or what to test first. This conversation is free and unlimited."
-                ),
-            )
+        _post(
+            db,
+            thread,
+            "chair",
+            chair["ruling"]
+            + "\n\nAssumptions this stands on: "
+            + " ".join(f"({i + 1}) {a}" for i, a in enumerate(chair["assumptions"]))
+            + (f"\n\nPreserved dissent: {chair['dissent']}" if chair.get("dissent") else "")
+            + (f"\n\nValidation plan: {chair['validation_plan']}" if chair.get("validation_plan") else ""),
+        )
+        _post(
+            db,
+            thread,
+            "agent",
+            "Your panel has ruled. I’m the advisor synthesized from its debate — ask me anything "
+            "about the verdict, the dissent, or what to test first. This conversation is free and unlimited.",
         )
         db.flush()
 

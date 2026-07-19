@@ -55,7 +55,7 @@ class ProblemThreadModel(Base):
         back_populates="thread", cascade="all, delete-orphan", order_by="BoardModel.round"
     )
     messages: Mapped[list["ThreadMessageModel"]] = relationship(
-        back_populates="thread", cascade="all, delete-orphan", order_by="ThreadMessageModel.created_at"
+        back_populates="thread", cascade="all, delete-orphan", order_by="ThreadMessageModel.id"
     )
 
 
