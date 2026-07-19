@@ -134,6 +134,21 @@ export function postMessage(
   });
 }
 
+export type AdviserProfile = {
+  adviser_id: string;
+  name: string;
+  domain: string;
+  metro: string;
+  hourly_rate: number;
+  skills_profile: string;
+};
+
+export function getAdviserDirectory(
+  getAuthToken?: GetAuthToken,
+): Promise<{ advisers: AdviserProfile[] }> {
+  return request("/advisers", getAuthToken);
+}
+
 export function getAdviserQuotes(
   threadId: string,
   getAuthToken?: GetAuthToken,

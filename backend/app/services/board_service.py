@@ -369,6 +369,28 @@ class BoardService:
             ranked = sorted(in_band or quotes, key=lambda q: abs(q.estimated_total - budget))
             return AdviserQuotesResponse(domain=thread.domain, quotes=ranked[:3])
 
+    def list_advisers(self) -> "AdviserDirectoryResponse":
+        """Demo adviser directory across all seven services (roadmap §3 item 6)."""
+        from app.schemas.boards import AdviserDirectoryResponse, AdviserProfile
+
+        with self._session_factory() as db:
+            self._seed_advisers_if_empty(db)
+            db.commit()
+            rows = db.execute(select(AdviserModel).order_by(AdviserModel.domain, AdviserModel.hourly_rate)).scalars().all()
+            return AdviserDirectoryResponse(
+                advisers=[
+                    AdviserProfile(
+                        adviser_id=a.id,
+                        name=a.name,
+                        domain=a.domain,
+                        metro=a.metro,
+                        hourly_rate=a.hourly_rate,
+                        skills_profile=a.skills_profile,
+                    )
+                    for a in rows
+                ]
+            )
+
     # ------------------------------------------------------------------ round 1
 
     def _run_round1(

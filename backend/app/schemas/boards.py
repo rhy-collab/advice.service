@@ -113,3 +113,16 @@ class AdviserQuote(BaseModel):
 class AdviserQuotesResponse(BaseModel):
     domain: str
     quotes: list[AdviserQuote]
+
+
+class AdviserProfile(BaseModel):
+    adviser_id: str
+    name: str
+    domain: str
+    metro: str
+    hourly_rate: int
+    skills_profile: str
+
+
+class AdviserDirectoryResponse(BaseModel):
+    advisers: list[AdviserProfile]

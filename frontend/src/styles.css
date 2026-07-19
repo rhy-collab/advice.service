@@ -2241,3 +2241,19 @@ nav a:hover {
 .th-msg-chair .th-msg-name { color: #5b46a8; }
 .th-typing { color: #6b7075; font-style: italic; }
 .th-quote-title { font-weight: 600; color: #6b7075; font-size: 13px; }
+
+/* Adviser marketplace screen */
+.th-marketplace-overlay {
+  position: absolute; inset: 0; background: #fff; overflow-y: auto; z-index: 5;
+}
+.th-main { position: relative; }
+.th-marketplace { max-width: 900px; margin: 0 auto; padding: 32px 28px 60px; }
+.th-marketplace-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; margin-bottom: 24px; }
+.th-marketplace-head h1 { font-size: 26px; margin-bottom: 6px; }
+.th-marketplace-head p { color: #6b7075; font-size: 14px; max-width: 520px; }
+.th-directory-title { font-size: 18px; margin: 28px 0 4px; }
+.th-directory-group h3 { font-size: 14px; color: #2f6f4f; margin: 18px 0 8px; text-transform: uppercase; letter-spacing: 0.04em; }
+.th-directory-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+.th-directory-card { border: 1px solid #e4e2de; border-radius: 10px; padding: 12px 14px; }
+.th-directory-card h4 { font-size: 13.5px; margin-bottom: 2px; }
+.th-directory-card p { font-size: 12.5px; line-height: 1.5; color: #3f4448; }

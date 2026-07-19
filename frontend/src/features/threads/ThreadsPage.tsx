@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  AdviserProfile,
   AdviserQuotesResponse,
   GetAuthToken,
   ThreadDetail,
   ThreadSummary,
   createThread,
+  getAdviserDirectory,
   getAdviserQuotes,
   getThread,
   listThreads,
@@ -44,6 +46,8 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
   const [composerText, setComposerText] = useState("");
   const [composerMode, setComposerMode] = useState<"agent" | "adviser">("agent");
   const [quotes, setQuotes] = useState<AdviserQuotesResponse | null>(null);
+  const [directory, setDirectory] = useState<AdviserProfile[] | null>(null);
+  const [matching, setMatching] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -112,6 +116,20 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
     }
   }
 
+  function openAdviserScreen() {
+    setComposerMode("adviser");
+    if (!directory) {
+      void getAdviserDirectory(getAuthToken).then((r) => setDirectory(r.advisers)).catch(() => {});
+    }
+    if (active?.status === "agent_ready" && !quotes) {
+      setMatching(true);
+      getAdviserQuotes(active.id, getAuthToken)
+        .then((r) => setQuotes(r))
+        .catch(() => {})
+        .finally(() => setMatching(false));
+    }
+  }
+
   async function handleSend() {
     if (!composerText.trim()) return;
     if (!active) {
@@ -119,12 +137,6 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
       const text = composerText.trim();
       setComposerText("");
       await startThread(text);
-      return;
-    }
-    if (composerMode === "adviser") {
-      const response = await guarded(() => getAdviserQuotes(active.id, getAuthToken));
-      if (response) setQuotes(response);
-      setComposerText("");
       return;
     }
     const content = composerText.trim();
@@ -213,29 +225,6 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
               })}
 
               {busy && <div className="th-msg th-msg-board"><span className="th-msg-name">The board</span><p className="th-typing">deliberating…</p></div>}
-
-              {quotes && (
-                <div className="th-quotes">
-                  <h2>Your matched advisers — {DOMAIN_LABELS[quotes.domain] ?? quotes.domain}</h2>
-                  <p className="th-quotes-note">
-                    Matched to this exact problem from your board's full context. Each sets their own rate; the estimate shown is a
-                    not-to-exceed cap (includes the {quotes.quotes[0]?.platform_fee_pct ?? 10}% platform fee).
-                  </p>
-                  {quotes.quotes.map((quote) => (
-                    <article key={quote.adviser_id} className="th-quote">
-                      <div>
-                        <h3>{quote.name}{quote.title ? <span className="th-quote-title"> — {quote.title}</span> : null}</h3>
-                        <p className="th-quote-meta">{quote.metro} · ${quote.hourly_rate}/hr · est. {quote.estimated_hours} hrs</p>
-                        <p>{quote.why_fit || quote.skills_profile}</p>
-                      </div>
-                      <div className="th-quote-price">
-                        <span>${quote.estimated_total}</span>
-                        <button className="th-primary" disabled title="Booking wires up with Stripe in Phase 8">Book</button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-              )}
             </div>
 
             <div className="th-composer">
@@ -251,31 +240,16 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
                 placeholder={
                   !active
                     ? "What's your biggest startup problem right now?"
-                    : composerMode === "agent"
-                      ? active.status === "agent_ready"
-                        ? "Ask your perfect agent about this problem…"
-                        : "Answer the board — users, MRR or stage, customer, team, goals…"
-                      : "Describe what you need — send to see your matched advisers…"
+                    : active.status === "agent_ready"
+                      ? "Ask your agent about this problem…"
+                      : "Answer the board — users, MRR or stage, customer, team, goals…"
                 }
                 rows={2}
               />
               <div className="th-composer-row">
                 <div className="th-tabs">
-                  <button
-                    className={composerMode === "agent" ? "active" : ""}
-                    onClick={() => setComposerMode("agent")}
-                  >
-                    🤖 Perfect Agent
-                  </button>
-                  <button
-                    className={composerMode === "adviser" ? "active" : ""}
-                    onClick={() => {
-                      setComposerMode("adviser");
-                      if (active?.status === "agent_ready") {
-                        void guarded(() => getAdviserQuotes(active.id, getAuthToken)).then((r) => r && setQuotes(r));
-                      }
-                    }}
-                  >
+                  <button className="active">🤖 Agent</button>
+                  <button onClick={openAdviserScreen}>
                     🧑‍💼 Adviser <span className="th-paid-dot" />
                   </button>
                 </div>
@@ -283,6 +257,69 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
               </div>
             </div>
           </>
+
+        {composerMode === "adviser" && (
+          <div className="th-marketplace-overlay">
+            <div className="th-marketplace">
+              <header className="th-marketplace-head">
+                <div>
+                  <h1>Adviser marketplace</h1>
+                  <p>Real experts, self-set rates, one flat 10% platform fee. Book only when you're ready — everything else stays free.</p>
+                </div>
+                <button className="th-primary" onClick={() => setComposerMode("agent")}>← Back to your board</button>
+              </header>
+
+              {matching && <p className="th-typing">Matching advisers to your thread from its full context…</p>}
+
+              {quotes && quotes.quotes.length > 0 && (
+                <section className="th-quotes">
+                  <h2>Matched to your thread — {DOMAIN_LABELS[quotes.domain] ?? quotes.domain}</h2>
+                  <p className="th-quotes-note">
+                    Picked for this exact problem using your context, triage, and the board's verdict. Estimates are
+                    not-to-exceed caps including the {quotes.quotes[0]?.platform_fee_pct ?? 10}% platform fee.
+                  </p>
+                  {quotes.quotes.map((quote) => (
+                    <article key={quote.adviser_id} className="th-quote">
+                      <div>
+                        <h3>{quote.name}{quote.title ? <span className="th-quote-title"> — {quote.title}</span> : null}</h3>
+                        <p className="th-quote-meta">{quote.metro} · ${quote.hourly_rate}/hr · est. {quote.estimated_hours} hrs</p>
+                        <p>{quote.why_fit || quote.skills_profile}</p>
+                      </div>
+                      <div className="th-quote-price">
+                        <span>${quote.estimated_total}</span>
+                        <button className="th-primary" disabled title="Booking wires up with Stripe in Phase 8">Book</button>
+                      </div>
+                    </article>
+                  ))}
+                </section>
+              )}
+
+              {directory && (
+                <section>
+                  <h2 className="th-directory-title">Browse every service</h2>
+                  {Object.entries(DOMAIN_LABELS).map(([domain, label]) => {
+                    const group = directory.filter((a) => a.domain === domain);
+                    if (group.length === 0) return null;
+                    return (
+                      <div key={domain} className="th-directory-group">
+                        <h3>{label}</h3>
+                        <div className="th-directory-grid">
+                          {group.map((adviser) => (
+                            <article key={adviser.adviser_id} className="th-directory-card">
+                              <h4>{adviser.name}</h4>
+                              <p className="th-quote-meta">{adviser.metro} · ${adviser.hourly_rate}/hr</p>
+                              <p>{adviser.skills_profile}</p>
+                            </article>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </section>
+              )}
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );

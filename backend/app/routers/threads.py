@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.schemas.boards import (
+    AdviserDirectoryResponse,
     AdviserQuotesResponse,
     CreateThreadRequest,
     PostMessageRequest,
@@ -61,6 +62,12 @@ def post_message(
     if response is None:
         raise HTTPException(status_code=404, detail="Thread not found")
     return response
+
+
+@router.get("/advisers", response_model=AdviserDirectoryResponse)
+def list_advisers(auth: AuthContext = Depends(require_auth_context)) -> AdviserDirectoryResponse:
+    """Browseable adviser directory across all seven services (demo data)."""
+    return board_service.list_advisers()
 
 
 @router.get("/threads-diagnostics/anthropic")
