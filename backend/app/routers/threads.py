@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.schemas.boards import (
+    AddConsultantRequest,
     AdviserDirectoryResponse,
     AdviserQuotesResponse,
     CreateThreadRequest,
@@ -62,6 +63,33 @@ def post_message(
     if response is None:
         raise HTTPException(status_code=404, detail="Thread not found")
     return response
+
+
+@router.post("/threads/{thread_id}/charter", response_model=ThreadDetail)
+def charter_message(
+    thread_id: str,
+    auth: AuthContext = Depends(require_auth_context),
+) -> ThreadDetail:
+    """Founder engages Charter Consultancy's triage team (reveals the §6 budget estimate)."""
+    thread = board_service.charter_message(thread_id, auth.organisation_id)
+    if thread is None:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    return thread
+
+
+@router.post("/threads/{thread_id}/consultants", response_model=ThreadDetail)
+def add_consultant(
+    thread_id: str,
+    request: AddConsultantRequest,
+    auth: AuthContext = Depends(require_auth_context),
+) -> ThreadDetail:
+    """Add a marketplace consultant into the chat."""
+    thread = board_service.add_consultant(
+        thread_id, auth.organisation_id, request.name, request.title, request.hourly_rate
+    )
+    if thread is None:
+        raise HTTPException(status_code=404, detail="Thread not found")
+    return thread
 
 
 @router.get("/advisers", response_model=AdviserDirectoryResponse)

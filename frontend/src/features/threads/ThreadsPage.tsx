@@ -4,7 +4,9 @@ import {
   GetAuthToken,
   ThreadDetail,
   ThreadSummary,
+  addConsultant,
   createThread,
+  engageCharter,
   getAdviserQuotes,
   getThread,
   listThreads,
@@ -24,6 +26,8 @@ const DOMAIN_LABELS: Record<string, string> = {
 function speaker(role: string): { name: string; kind: string } {
   if (role.startsWith("advisor:")) return { name: role.slice(8), kind: "advisor" };
   if (role.startsWith("chair:")) return { name: role.slice(6), kind: "chair" };
+  if (role.startsWith("consultant:")) return { name: role.slice(11), kind: "consultant" };
+  if (role === "charter") return { name: "Charter Consultancy", kind: "charter" };
   switch (role) {
     case "founder":
       return { name: "You", kind: "founder" };
@@ -115,13 +119,31 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
 
   function openAdviserScreen() {
     setComposerMode("adviser");
-    // Advisers unlock only at Stage 4 — matched to the ruled problem (invariant 7).
+    // Consultants unlock only at Stage 4 — matched to the ruled problem (invariant 7).
     if (active?.status === "agent_ready" && !quotes) {
       setMatching(true);
       getAdviserQuotes(active.id, getAuthToken)
         .then((r) => setQuotes(r))
         .catch(() => {})
         .finally(() => setMatching(false));
+    }
+  }
+
+  async function handleCharter() {
+    if (!active) return;
+    setComposerMode("agent");
+    const detail = await guarded(() => engageCharter(active.id, getAuthToken));
+    if (detail) setActive(detail);
+  }
+
+  async function handleAddConsultant(name: string, title: string, hourlyRate: number) {
+    if (!active) return;
+    const detail = await guarded(() =>
+      addConsultant(active.id, { name, title, hourly_rate: hourlyRate }, getAuthToken),
+    );
+    if (detail) {
+      setActive(detail);
+      setComposerMode("agent");
     }
   }
 
@@ -243,9 +265,12 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
               />
               <div className="th-composer-row">
                 <div className="th-tabs">
-                  <button className="active">🤖 Agent</button>
-                  <button onClick={openAdviserScreen}>
-                    🧑‍💼 Adviser <span className="th-paid-dot" />
+                  <button className={composerMode === "agent" ? "active" : ""} onClick={() => setComposerMode("agent")}>🤖 Agent</button>
+                  <button onClick={() => void handleCharter()}>
+                    🏛 Charter Consultancy <span className="th-paid-dot" />
+                  </button>
+                  <button className={composerMode === "adviser" ? "active" : ""} onClick={openAdviserScreen}>
+                    ➕ Add consultant <span className="th-paid-dot" />
                   </button>
                 </div>
                 <button className="th-send" disabled={busy} onClick={() => void handleSend()} aria-label="Send">→</button>
@@ -297,7 +322,13 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
                       </div>
                       <div className="th-quote-price">
                         <span>${quote.estimated_total}</span>
-                        <button className="th-primary" disabled title="Booking wires up with Stripe in Phase 8">Book</button>
+                        <button
+                          className="th-primary"
+                          disabled={busy}
+                          onClick={() => void handleAddConsultant(quote.name, quote.title || quote.skills_profile, quote.hourly_rate)}
+                        >
+                          + Add to chat
+                        </button>
                       </div>
                     </article>
                   ))}

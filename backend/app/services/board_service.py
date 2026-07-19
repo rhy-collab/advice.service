@@ -275,18 +275,44 @@ class BoardService:
                     )
                 )
 
-            reply_text = self._perfect_agent_reply(db, thread, content)
-            reply = ThreadMessageModel(thread_id=thread.id, role="agent", content=reply_text)
+            consultants = [m.role.split(":", 1)[1] for m in thread.messages if m.role.startswith("consultant:")]
+            if consultants:
+                speaker_name = consultants[-1]
+                reply_text = self._consultant_reply(db, thread, speaker_name, content)
+                reply = ThreadMessageModel(thread_id=thread.id, role=f"consultant:{speaker_name}", content=reply_text)
+            else:
+                reply_text = self._perfect_agent_reply(db, thread, content)
+                reply = ThreadMessageModel(thread_id=thread.id, role="agent", content=reply_text)
             db.add(reply)
             db.commit()
             db.refresh(reply)
             return PostMessageResponse(
                 reply=ThreadMessage(
-                    role="agent",
+                    role=reply.role,
                     content=reply_text,
                     created_at=reply.created_at.isoformat() if reply.created_at else "",
                 )
             )
+
+    def _consultant_reply(
+        self, db: Session, thread: ProblemThreadModel, name: str, founder_message: str
+    ) -> str:
+        if os.getenv("ANTHROPIC_API_KEY"):
+            verdict = self._round3_verdict(db, thread)
+            out = self._claude(
+                f"You are {name}, an independent expert consultant in a founder's advisory chat. "
+                "Answer their question with concrete, experienced advice grounded in their problem "
+                "and the board's verdict. 150 words max, plain conversational prose, no markdown.",
+                f"Problem: {thread.problem_text}\n"
+                f"Verdict: {(verdict.ruling if verdict else '')[:400]}\n"
+                f"Founder asks: {founder_message}",
+            )
+            if out:
+                return out
+        return (
+            f"[{name}] Good question — here’s my working view: start from the board’s ruling, "
+            "test its first assumption this week, and bring me the result; I’ll go deeper with you from there."
+        )
 
     def _absorb_context_message(
         self, db: Session, profile: FounderContextProfileModel, message: str
@@ -326,6 +352,71 @@ class BoardService:
             if not (getattr(profile, key) or "").strip():
                 setattr(profile, key, message.strip())
         db.flush()
+
+    def charter_message(self, thread_id: str, organisation_id: str) -> ThreadDetail | None:
+        """Founder clicked 'Charter Consultancy': triage-team welcome, with the §6 budget revealed
+        only now that they've explicitly engaged (invariant 7)."""
+        with self._session_factory() as db:
+            thread = self._get_thread(db, thread_id, organisation_id)
+            if thread is None:
+                return None
+            if thread.status != "agent_ready":
+                _post(
+                    db,
+                    thread,
+                    "charter",
+                    "Hi, welcome to Charter Consultancy. We can help directly — but first your board "
+                    "needs to finish understanding the problem. Keep the conversation going with the "
+                    "Agent; once the Chair has ruled, come back and we'll book you in with our triage team.",
+                )
+            else:
+                verdict = self._round3_verdict(db, thread)
+                cost = verdict.estimated_cost if verdict and verdict.estimated_cost else 500
+                _post(
+                    db,
+                    thread,
+                    "charter",
+                    "Hi, welcome to Charter Consultancy. I can see your problem and everything your "
+                    "board has already worked through. The next step is a phone call with our triage "
+                    "team — they'll get a deeper understanding of what you're facing and confirm "
+                    "whether our internal team can solve it for you. Book a call and we'll come "
+                    "prepared with your full thread.\n\n"
+                    f"Please note our approximate budget for a matter like yours is ${cost}. "
+                    "Our engagements are flat-fee — $250 simple / $500 standard / $1,000 negotiation / "
+                    "$2,000 drafting — agreed before any work starts, so there are no surprise invoices.",
+                )
+            db.commit()
+            return self._thread_detail(db, thread_id, organisation_id)
+
+    def add_consultant(
+        self, thread_id: str, organisation_id: str, name: str, title: str, hourly_rate: int
+    ) -> ThreadDetail | None:
+        """Add a marketplace consultant into the chat — they introduce themselves in-character."""
+        with self._session_factory() as db:
+            thread = self._get_thread(db, thread_id, organisation_id)
+            if thread is None:
+                return None
+            intro = None
+            if os.getenv("ANTHROPIC_API_KEY"):
+                verdict = self._round3_verdict(db, thread)
+                intro = self._claude(
+                    f"You are {name} ({title}), an independent expert consultant who has just been "
+                    "added to a founder's advisory chat. Introduce yourself in 60 words max: "
+                    "reference their specific problem, say what you'd tackle first, and invite their "
+                    "questions. Warm, confident, plain conversational prose — no markdown.",
+                    f"Problem: {thread.problem_text}\n"
+                    f"Board verdict: {(verdict.ruling if verdict else '')[:400]}",
+                    max_tokens=200,
+                )
+            if not intro:
+                intro = (
+                    f"Hi, I’m {name} — {title}. I’ve read your thread and the board’s verdict, and "
+                    "I’m here in this chat whenever you need me. Ask me anything about your problem "
+                    "and I’ll give you my working view."
+                )
+            _post(db, thread, f"consultant:{name}", intro)
+            db.commit()
+            return self._thread_detail(db, thread_id, organisation_id)
 
     # ------------------------------------------------------- adviser matching
 
@@ -620,8 +711,11 @@ class BoardService:
             db,
             thread,
             "agent",
-            "Your panel has ruled. I’m the advisor synthesized from its debate — ask me anything "
-            "about the verdict, the dissent, or what to test first. This conversation is free and unlimited.",
+            "I now understand your deep domain problem — your panel has ruled, and I’m the advisor "
+            "synthesized from its debate. Ask me anything about the verdict, the dissent, or what to "
+            "test first; this conversation is free and unlimited. When you’re ready for humans: the "
+            "Charter Consultancy button below connects you with our triage team, and Add consultant "
+            "brings hand-matched independent experts into this chat.",
         )
         db.flush()
 

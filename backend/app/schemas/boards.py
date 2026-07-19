@@ -93,6 +93,12 @@ class PostMessageRequest(BaseModel):
     content: str = Field(min_length=1, max_length=8000)
 
 
+class AddConsultantRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=128)
+    title: str = Field(default="", max_length=256)
+    hourly_rate: int = Field(default=250, ge=0, le=5000)
+
+
 class PostMessageResponse(BaseModel):
     reply: ThreadMessage
 

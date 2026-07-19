@@ -149,6 +149,24 @@ export function getAdviserDirectory(
   return request("/advisers", getAuthToken);
 }
 
+export function engageCharter(
+  threadId: string,
+  getAuthToken?: GetAuthToken,
+): Promise<ThreadDetail> {
+  return request(`/threads/${threadId}/charter`, getAuthToken, { method: "POST" });
+}
+
+export function addConsultant(
+  threadId: string,
+  consultant: { name: string; title: string; hourly_rate: number },
+  getAuthToken?: GetAuthToken,
+): Promise<ThreadDetail> {
+  return request(`/threads/${threadId}/consultants`, getAuthToken, {
+    method: "POST",
+    body: JSON.stringify(consultant),
+  });
+}
+
 export function getAdviserQuotes(
   threadId: string,
   getAuthToken?: GetAuthToken,
