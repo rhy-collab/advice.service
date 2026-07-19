@@ -77,8 +77,8 @@ export function LoginPage({ demoMode = false }: { demoMode?: boolean }) {
 
 function DemoSignInButton() {
   return (
-    <a className="primary-action" href="/portal">
-      Continue to demo portal <ArrowRight aria-hidden="true" size={18} />
+    <a className="primary-action" href="/app">
+      Continue to the app <ArrowRight aria-hidden="true" size={18} />
     </a>
   );
 }

@@ -12,7 +12,10 @@ import "./styles.css";
 
 initFrontendSentry();
 
-const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
+// Clerk temporarily bypassed — users go straight into the app (demo auth).
+// To re-enable: restore the import.meta.env read below.
+const clerkPublishableKey = undefined as string | undefined;
+// const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
 type AppRoute = "admin" | "app" | "attorney" | "home" | "login" | "portal";
 
 function App() {

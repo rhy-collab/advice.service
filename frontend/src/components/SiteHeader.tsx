@@ -1,6 +1,7 @@
 import { SignUpButton } from "@clerk/clerk-react";
 
-const clerkEnabled = Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+// Clerk temporarily bypassed — sign-up goes straight into the app.
+const clerkEnabled = false;
 
 export function SiteHeader() {
   return (
@@ -35,7 +36,7 @@ export function SiteHeader() {
 function SignUpAction() {
   if (!clerkEnabled) {
     return (
-      <a className="header-signup" href="/portal">
+      <a className="header-signup" href="/app">
         Sign up
       </a>
     );
