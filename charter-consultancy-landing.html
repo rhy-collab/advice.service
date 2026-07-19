@@ -1,0 +1,1928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Charter Consultancy — Every Answer, Debated First</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fustat:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Schibsted+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --black: #0b0c0d;
+    --ink: #14171a;
+    --gray-700: #3f4448;
+    --gray-500: #6b7075;
+    --gray-300: #c9cdd0;
+    --gray-100: #f3f4f5;
+    --paper: #fbfaf8;
+    --white: #ffffff;
+    --accent: #2f6f4f;      /* muted green — dissent/verdict accent */
+    --accent-soft: #e6f0ea;
+    --line: #e4e2de;
+    --radius-lg: 20px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --shadow-card: 0 1px 2px rgba(11,12,13,0.04), 0 8px 24px rgba(11,12,13,0.05);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    background: var(--paper);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+
+  h1, h2, h3 {
+    font-family: 'Fustat', sans-serif;
+    letter-spacing: -0.02em;
+    line-height: 1.05;
+  }
+
+  /* ---------------- Nav ---------------- */
+  header.nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(251,250,248,0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 0;
+  }
+  .logo {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .logo-mark {
+    width: 22px; height: 22px;
+    background: var(--black);
+    border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center;
+  }
+  .logo-mark svg { width: 12px; height: 12px; }
+
+  .nav-links {
+    display: flex;
+    gap: 32px;
+  }
+  .nav-links a {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    color: var(--gray-700);
+  }
+  .nav-links a:hover { color: var(--black); }
+
+  .nav-actions { display: flex; align-items: center; gap: 14px; }
+
+  .btn {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 20px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-ghost { background: transparent; color: var(--ink); }
+  .btn-dark { background: var(--black); color: var(--white); }
+  .btn-dark:hover { background: #24272a; }
+
+  /* ---------------- Hero ---------------- */
+  .hero {
+    position: relative;
+    padding: 96px 0 72px;
+    overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background:
+      radial-gradient(600px 400px at 18% 15%, rgba(47,111,79,0.10), transparent 60%),
+      radial-gradient(700px 500px at 85% 10%, rgba(11,12,13,0.06), transparent 55%);
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 14px 6px 6px;
+    box-shadow: var(--shadow-card);
+    margin: 0 auto 28px;
+  }
+  .hero-badge .pill {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 4px 9px;
+    border-radius: 999px;
+  }
+  .hero-badge span.text {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--gray-700);
+  }
+
+  .hero-center { text-align: center; max-width: 820px; margin: 0 auto; }
+
+  .hero h1 {
+    font-weight: 700;
+    font-size: 68px;
+    letter-spacing: -0.03em;
+    color: var(--black);
+  }
+  .hero h1 .em { color: var(--accent); }
+
+  .hero p.sub {
+    font-family: 'Fustat', sans-serif;
+    font-weight: 500;
+    font-size: 19px;
+    color: var(--gray-500);
+    max-width: 620px;
+    margin: 24px auto 0;
+    line-height: 1.5;
+  }
+
+  /* Query box */
+  .query-box {
+    max-width: 700px;
+    margin: 40px auto 0;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    padding: 8px 8px 14px;
+    text-align: left;
+  }
+  .query-textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    color: var(--ink);
+    padding: 16px 16px 8px;
+    min-height: 64px;
+    background: transparent;
+  }
+  .query-textarea::placeholder { color: var(--gray-500); }
+
+  .query-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+  }
+  .query-chips { display: flex; gap: 8px; }
+  .chip {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--gray-100);
+    border: none;
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--gray-700);
+    cursor: pointer;
+  }
+  .submit-btn {
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    background: var(--black);
+    border: none;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .submit-btn svg { width: 16px; height: 16px; }
+
+  .hero-microcopy {
+    margin-top: 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--gray-500);
+    text-align: center;
+  }
+  .hero-microcopy strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------------- Section shared ---------------- */
+  section { padding: 88px 0; }
+  .section-kicker {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-weight: 700;
+    font-size: 38px;
+    letter-spacing: -0.02em;
+    color: var(--black);
+    max-width: 640px;
+  }
+  .section-title.center { margin: 0 auto; text-align: center; }
+  .section-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    color: var(--gray-500);
+    max-width: 560px;
+    margin-top: 16px;
+    line-height: 1.6;
+  }
+  .section-sub.center { margin-left: auto; margin-right: auto; text-align: center; }
+
+  /* ---------------- Problem section ---------------- */
+  .problem { background: var(--white); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .problem-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--line);
+    margin-top: 48px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+  .problem-card {
+    background: var(--white);
+    padding: 32px 28px;
+  }
+  .problem-card .num {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--gray-300);
+    margin-bottom: 18px;
+  }
+  .problem-card h3 {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 10px;
+  }
+  .problem-card p {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--gray-500);
+    line-height: 1.55;
+  }
+
+  /* ---------------- Domains grid ---------------- */
+  .domains-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 48px;
+  }
+  .domain-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 26px;
+    transition: border-color 0.15s ease, transform 0.15s ease;
+  }
+  .domain-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .domain-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: var(--accent-soft);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  .domain-card h3 {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+  .domain-card p {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--gray-500);
+    line-height: 1.5;
+  }
+
+  /* ---------------- How it works ---------------- */
+  .flow { background: var(--black); color: var(--white); }
+  .flow .section-kicker { color: #7fd1a6; }
+  .flow .section-title { color: var(--white); }
+  .flow .section-sub { color: rgba(255,255,255,0.55); }
+
+  .flow-steps {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 56px;
+  }
+  .flow-step {
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: var(--radius-md);
+    padding: 26px 22px;
+    background: rgba(255,255,255,0.03);
+  }
+  .flow-step .step-num {
+    font-family: 'Fustat', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: #7fd1a6;
+    margin-bottom: 18px;
+  }
+  .flow-step h3 {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .flow-step p {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: rgba(255,255,255,0.62);
+    line-height: 1.55;
+  }
+  .flow-step .free-tag {
+    display: inline-block;
+    margin-top: 14px;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #7fd1a6;
+  }
+  .flow-step .paid-tag {
+    display: inline-block;
+    margin-top: 14px;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #e0b95a;
+  }
+
+  /* ---------------- What you get ---------------- */
+  .verdict-panel {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: var(--shadow-card);
+  }
+  .verdict-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+    gap: 24px;
+  }
+  .verdict-row:last-child { border-bottom: none; }
+  .verdict-row .label {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--black);
+    min-width: 140px;
+  }
+  .verdict-row .value {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--gray-500);
+    text-align: right;
+    max-width: 340px;
+  }
+  .dissent-tag {
+    display: inline-block;
+    background: #fdecec;
+    color: #b3413a;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-top: 6px;
+  }
+
+  .get-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: center;
+    margin-top: 48px;
+  }
+  .get-list { display: flex; flex-direction: column; gap: 22px; }
+  .get-item { display: flex; gap: 16px; }
+  .get-item .dot {
+    width: 28px; height: 28px; min-width: 28px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 700;
+    font-family: 'Schibsted Grotesk', sans-serif;
+  }
+  .get-item h4 {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 15.5px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .get-item p {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--gray-500);
+    line-height: 1.5;
+  }
+
+  /* ---------------- Marketplace ---------------- */
+  .market { background: var(--gray-100); }
+  .adviser-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 48px;
+  }
+  .adviser-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    padding: 24px;
+  }
+  .adviser-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .avatar {
+    width: 40px; height: 40px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #d7d2c8, #b9bfb6);
+  }
+  .adviser-name {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 14.5px;
+  }
+  .adviser-role {
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    color: var(--gray-500);
+  }
+  .adviser-skill {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: var(--gray-700);
+    line-height: 1.5;
+    margin-bottom: 18px;
+  }
+  .adviser-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .adviser-rate {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--black);
+  }
+  .adviser-est {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--gray-500);
+  }
+
+  /* ---------------- Pricing ---------------- */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 48px;
+  }
+  .price-card {
+    border-radius: var(--radius-lg);
+    padding: 36px;
+    border: 1px solid var(--line);
+    background: var(--white);
+  }
+  .price-card.dark {
+    background: var(--black);
+    color: var(--white);
+    border-color: var(--black);
+  }
+  .price-tag {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .price-card.dark .price-tag { color: #7fd1a6; }
+  .price-amount {
+    font-family: 'Fustat', sans-serif;
+    font-weight: 700;
+    font-size: 44px;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+  }
+  .price-amount span { font-size: 16px; font-weight: 500; color: var(--gray-500); }
+  .price-card.dark .price-amount span { color: rgba(255,255,255,0.5); }
+  .price-desc {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--gray-500);
+    margin-bottom: 24px;
+    line-height: 1.55;
+  }
+  .price-card.dark .price-desc { color: rgba(255,255,255,0.6); }
+  .price-list { display: flex; flex-direction: column; gap: 12px; }
+  .price-list li {
+    list-style: none;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: var(--ink);
+  }
+  .price-card.dark .price-list li { color: rgba(255,255,255,0.85); }
+  .price-list svg { width: 15px; height: 15px; margin-top: 2px; flex-shrink: 0; }
+
+  /* ---------------- Final CTA ---------------- */
+  .cta {
+    text-align: center;
+    padding: 100px 0;
+  }
+  .cta h2 {
+    font-weight: 700;
+    font-size: 42px;
+    letter-spacing: -0.02em;
+    max-width: 620px;
+    margin: 0 auto 28px;
+  }
+  .cta .btn { padding: 14px 30px; font-size: 15px; }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 40px 0;
+  }
+  .footer-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .footer-inner p {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--gray-500);
+  }
+  .footer-links { display: flex; gap: 24px; }
+  .footer-links a {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--gray-500);
+  }
+  .footer-links a:hover { color: var(--ink); }
+
+  @media (max-width: 960px) {
+    .nav-links { display: none; }
+    .hero h1 { font-size: 42px; }
+    .problem-grid { grid-template-columns: 1fr 1fr; }
+    .domains-grid { grid-template-columns: 1fr 1fr; }
+    .flow-steps { grid-template-columns: 1fr 1fr; }
+    .get-grid { grid-template-columns: 1fr; }
+    .adviser-grid { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .verdict-row { flex-direction: column; }
+    .verdict-row .value { text-align: left; max-width: 100%; }
+  }
+
+  /* ---------------- Auth modal (demo — swap for real Clerk when a publishable key exists) ---------------- */
+  .auth-overlay {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(11,12,13,0.5);
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .auth-overlay.open { display: flex; }
+  .auth-modal {
+    width: 100%; max-width: 380px;
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    padding: 32px;
+    position: relative;
+  }
+  .auth-close {
+    position: absolute; top: 16px; right: 16px;
+    width: 28px; height: 28px;
+    border: none; background: var(--gray-100);
+    border-radius: 999px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .auth-demo-tag {
+    display: inline-block;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--gray-500);
+    background: var(--gray-100);
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+  .auth-modal h3 {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .auth-modal p.auth-sub {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: var(--gray-500);
+    margin-bottom: 22px;
+  }
+  .auth-google-btn {
+    width: 100%;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    margin-bottom: 14px;
+  }
+  .auth-google-btn:hover { background: var(--gray-100); }
+  .auth-divider {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    color: var(--gray-300);
+    margin: 14px 0;
+  }
+  .auth-divider::before, .auth-divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--line);
+  }
+  .auth-field {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    margin-bottom: 12px;
+    outline: none;
+  }
+  .auth-field:focus { border-color: var(--black); }
+  .auth-submit {
+    width: 100%;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    border-radius: 10px;
+    padding: 12px;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  .auth-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+  .auth-label {
+    display: block;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin-bottom: 6px;
+  }
+  .auth-back {
+    position: absolute; top: 16px; left: 16px;
+    width: 28px; height: 28px;
+    border: none; background: var(--gray-100);
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .auth-footer-note {
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    color: var(--gray-300);
+    margin-top: 18px;
+  }
+  .auth-footer-note strong { color: var(--gray-500); }
+  .auth-code-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .auth-code-box {
+    width: 44px; height: 52px;
+    text-align: center;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    outline: none;
+  }
+  .auth-code-box:focus { border-color: var(--black); }
+  .auth-resend {
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-top: 14px;
+  }
+  .auth-resend a { color: var(--ink); font-weight: 600; }
+  .auth-step-success {
+    text-align: center;
+    padding: 20px 0 8px;
+  }
+  .auth-check {
+    width: 52px; height: 52px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    font-size: 24px;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 18px;
+  }
+
+  /* ---------------- Prototype app shell (portal layout) ---------------- */
+  .app-shell {
+    display: none;
+    position: fixed; inset: 0; z-index: 100;
+    background: var(--black);
+  }
+  .app-shell.open { display: flex; }
+
+  /* -- Sidebar -- */
+  .app-sidebar {
+    width: 272px;
+    min-width: 272px;
+    background: var(--black);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    padding: 20px 16px;
+  }
+  .app-sidebar-logo {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 15.5px;
+    padding: 4px 4px 22px;
+  }
+  .app-sidebar-logo .logo-mark { width: 20px; height: 20px; background: rgba(255,255,255,0.12); }
+  .app-sidebar-logo .logo-mark svg { width: 11px; height: 11px; }
+
+  .app-new-thread {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--white);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+    margin-bottom: 18px;
+  }
+  .app-new-thread:hover { background: rgba(255,255,255,0.14); }
+
+  .app-sidebar-nav { display: flex; flex-direction: column; gap: 2px; margin-bottom: 22px; }
+  .app-sidebar-nav a {
+    display: flex; align-items: center; gap: 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: rgba(255,255,255,0.72);
+    padding: 8px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .app-sidebar-nav a:hover, .app-sidebar-nav a.active { background: rgba(255,255,255,0.08); color: var(--white); }
+
+  .app-sidebar-section-label {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.35);
+    padding: 0 8px;
+    margin-bottom: 8px;
+  }
+  .app-recent-threads { flex: 1; overflow-y: auto; }
+  .app-thread-item {
+    font-family: 'Inter', sans-serif;
+    font-size: 13.5px;
+    color: rgba(255,255,255,0.6);
+    padding: 8px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .app-thread-item.active { background: rgba(255,255,255,0.1); color: var(--white); }
+
+  .app-sidebar-bottom {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 14px;
+    margin-top: 14px;
+  }
+  .app-collapse {
+    background: transparent; border: none; color: rgba(255,255,255,0.5);
+    font-family: 'Inter', sans-serif; font-size: 12.5px;
+    cursor: pointer; padding: 6px 8px; margin-bottom: 8px;
+  }
+  .app-sidebar-user {
+    display: flex; align-items: center; gap: 10px;
+    padding: 6px 8px;
+  }
+  .avatar-sm {
+    width: 26px; height: 26px; min-width: 26px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #d7d2c8, #b9bfb6);
+    display: inline-block;
+  }
+  .app-sidebar-user .u-email {
+    font-family: 'Inter', sans-serif; font-size: 12.5px; font-weight: 600; color: var(--white);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;
+  }
+  .app-sidebar-user .u-org {
+    font-family: 'Inter', sans-serif; font-size: 11.5px; color: rgba(255,255,255,0.45);
+  }
+
+  /* -- Main (floating white card, General Legal portal pattern) -- */
+  .app-main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: var(--white);
+    border-radius: 14px;
+    margin: 10px 10px 10px 0;
+    overflow: hidden;
+  }
+
+  .app-banner {
+    background: #fdf3e3;
+    color: #8a5a10;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    text-align: center;
+    padding: 11px 20px;
+  }
+
+  .app-header-row {
+    display: flex; align-items: center; gap: 14px;
+    padding: 16px 28px;
+    border-bottom: 1px solid var(--line);
+    background: var(--white);
+  }
+  .app-back {
+    background: transparent; border: none; cursor: pointer;
+    font-size: 15px; color: var(--gray-500);
+    width: 28px; height: 28px;
+  }
+  .app-header-title {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    flex: 1;
+  }
+  .app-header-actions { display: flex; gap: 8px; }
+  .app-header-btn {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 12.5px;
+    border-radius: 999px;
+    padding: 7px 14px;
+    cursor: pointer;
+    border: 1px solid var(--line);
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .app-header-btn.ghost { background: var(--white); color: var(--gray-700); }
+
+  .app-thread-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: 28px 28px 12px;
+    max-width: 820px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .msg { display: flex; gap: 12px; margin-bottom: 22px; align-items: flex-start; }
+  .msg-avatar {
+    width: 30px; height: 30px; min-width: 30px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    background: var(--gray-100);
+  }
+  .msg-avatar.dark { background: var(--black); color: var(--white); }
+  .msg-body { flex: 1; }
+  .msg-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .msg-name { font-family: 'Schibsted Grotesk', sans-serif; font-weight: 700; font-size: 13.5px; }
+  .msg-badge {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 10.5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+  .msg-badge.paid { background: #ece7f9; color: #5b46a8; }
+  .msg-time { font-family: 'Inter', sans-serif; font-size: 11.5px; color: var(--gray-300); }
+  .msg-text {
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .msg-text.muted { color: var(--gray-500); }
+  .msg.system .msg-text { color: var(--gray-500); font-size: 13.5px; }
+  .msg-codeblock {
+    background: var(--gray-100);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: 13px;
+    color: var(--ink);
+    margin-top: 8px;
+    white-space: pre-wrap;
+  }
+  .msg-disclaimer {
+    background: var(--gray-100);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 4px;
+  }
+  .msg-disclaimer .msg-text { font-style: italic; font-size: 13px; color: var(--gray-500); }
+
+  /* Human adviser turns get a tinted card, mirroring the attorney turns in the portal reference */
+  .msg-highlight {
+    background: #f4f1fb;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-top: 4px;
+  }
+  .msg-badge.adviser { background: #ece7f9; color: #5b46a8; }
+
+  .app-composer {
+    background: var(--white);
+    padding: 8px 28px 22px;
+  }
+  .app-composer-inner {
+    max-width: 820px;
+    margin: 0 auto;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 6px 6px 8px;
+    background: var(--white);
+    box-shadow: var(--shadow-card);
+  }
+  .app-composer-inner:focus-within { border-color: var(--gray-300); }
+  .app-composer-toggle { display: flex; gap: 8px; }
+  .toggle-pill {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 12.5px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: var(--gray-500);
+    cursor: pointer;
+  }
+  .toggle-pill.active { background: var(--ink); color: var(--white); border-color: var(--ink); }
+  .toggle-pill .paid-dot {
+    width: 6px; height: 6px; border-radius: 999px; background: #e0b95a; display: inline-block;
+  }
+  .app-composer-input {
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    padding: 14px 14px 10px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14.5px;
+    resize: none;
+    outline: none;
+    background: transparent;
+  }
+  .app-composer-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+    padding: 0 6px;
+  }
+  .app-composer-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .app-composer-chip {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 7px 13px;
+    font-family: 'Inter', sans-serif;
+    font-size: 12.5px;
+    color: var(--gray-700);
+    cursor: pointer;
+  }
+  .app-composer-chip:hover { background: var(--gray-100); }
+  .app-composer-send {
+    width: 36px; height: 36px;
+    border-radius: 999px;
+    background: var(--black);
+    color: var(--white);
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+  }
+
+  @media (max-width: 900px) {
+    .app-sidebar { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="logo">
+      <span class="logo-mark">
+        <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 0L7.4 4.2L11.5 5.5L7.4 6.8L6 11L4.6 6.8L0.5 5.5L4.6 4.2L6 0Z" fill="white"/></svg>
+      </span>
+      Charter Consultancy
+    </div>
+    <nav class="nav-links">
+      <a href="#how-it-works">How It Works</a>
+      <a href="#domains">Domains</a>
+      <a href="#advisers">Advisers</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+    <div class="nav-actions">
+      <button class="btn btn-ghost" data-auth-trigger="sign-in">Log In</button>
+      <button class="btn btn-dark" data-auth-trigger="sign-up">Sign Up</button>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="wrap hero-center">
+    <div class="hero-badge">
+      <span class="pill">New</span>
+      <span class="text">Free AI board, real experts on demand</span>
+    </div>
+    <h1>Every Answer,<br /><span class="em">Debated First.</span></h1>
+    <p class="sub">Describe your problem once. Watch AI experts with genuinely opposing views argue it out live — then get matched with the real professional who's right for you, at your budget.</p>
+
+    <div class="query-box">
+      <textarea id="heroProblemInput" class="query-textarea" placeholder="What's your biggest startup problem right now?" rows="2"></textarea>
+      <div class="query-footer">
+        <div class="query-chips">
+          <button class="chip">📎 Attach</button>
+          <button class="chip">🎙 Voice</button>
+        </div>
+        <button class="submit-btn" aria-label="Submit" data-auth-trigger="sign-up" data-from-query="true">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 13V3M8 3L3 8M8 3L13 8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+    </div>
+    <p class="hero-microcopy">No credit card. <strong>Unlimited</strong> AI conversation, forever. Pay only if you hire someone.</p>
+  </div>
+</section>
+
+<!-- ============ PROBLEM ============ -->
+<section class="problem">
+  <div class="wrap">
+    <span class="section-kicker">The problem</span>
+    <h2 class="section-title">Founders make irreversible decisions with reversible-quality advice.</h2>
+    <p class="section-sub">Pricing, GTM, fundraising, legal terms — set wrong, they cost you for years. A real advisory board is slow and out of reach. So founders ask an LLM and get the average of the internet: confident, generic, and impossible to check.</p>
+
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="num">01</div>
+        <h3>Decisions compound</h3>
+        <p>The wrong call on pricing or GTM doesn't cost you a week — it costs you years of margin and who your product attracts.</p>
+      </div>
+      <div class="problem-card">
+        <div class="num">02</div>
+        <h3>Real boards are out of reach</h3>
+        <p>A real advisory board costs equity and a calendar you don't control. Not available at pre-seed, not available at 2am.</p>
+      </div>
+      <div class="problem-card">
+        <div class="num">03</div>
+        <h3>One AI gives you one opinion</h3>
+        <p>A single model answers with total confidence and no visible assumptions — you can't tell what it doesn't know.</p>
+      </div>
+      <div class="problem-card">
+        <div class="num">04</div>
+        <h3>Cosmetic debate isn't real debate</h3>
+        <p>Same model, same prompt, asked three ways, converges into expensive agreement. It looks like rigor. It isn't.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DOMAINS ============ -->
+<section id="domains">
+  <div class="wrap">
+    <span class="section-kicker">Seven domains</span>
+    <h2 class="section-title">Whatever's actually stuck, we route it to the right board.</h2>
+    <p class="section-sub">Describe the problem in your own words — our triage board figures out which domain actually owns it, then hands it to the specialists.</p>
+
+    <div class="domains-grid">
+      <div class="domain-card">
+        <div class="domain-icon">💰</div>
+        <h3>Pricing Strategy</h3>
+        <p>How much should you charge? How do you price against competitors without leaving money on the table?</p>
+      </div>
+      <div class="domain-card">
+        <div class="domain-icon">📈</div>
+        <h3>Fundraising</h3>
+        <p>Should you raise, when, how much, and who's actually worth talking to at your stage?</p>
+      </div>
+      <div class="domain-card">
+        <div class="domain-icon">🎯</div>
+        <h3>Go-To-Market</h3>
+        <p>Where do you find customers, what channel actually works, and how do you launch without wasting six months?</p>
+      </div>
+      <div class="domain-card">
+        <div class="domain-icon">📋</div>
+        <h3>Pitch &amp; Messaging</h3>
+        <p>Does your pitch actually land? What's missing, and what are investors hearing that you're not saying?</p>
+      </div>
+      <div class="domain-card">
+        <div class="domain-icon">⚖️</div>
+        <h3>Legal &amp; Compliance</h3>
+        <p>Do you need a lawyer for this? What should your terms actually say? A real attorney reviews every deliverable.</p>
+      </div>
+      <div class="domain-card">
+        <div class="domain-icon">🏙️</div>
+        <h3>Resources &amp; Location</h3>
+        <p>Where should you build, which ecosystem fits your stage, and who can actually help you get there?</p>
+      </div>
+      <div class="domain-card">
+        <div class="domain-icon">🛠️</div>
+        <h3>Developer &amp; Engineering</h3>
+        <p>Build or buy, what stack fits, how do you hire your first engineer without betting the company on it?</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="flow" id="how-it-works">
+  <div class="wrap">
+    <span class="section-kicker">How it works</span>
+    <h2 class="section-title">Four rounds. Real disagreement. One clear next step.</h2>
+    <p class="section-sub">Not a chatbot with a system prompt — a structured process that gets sharper at every stage.</p>
+
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="step-num">01</div>
+        <h3>Context</h3>
+        <p>A small board checks whether it actually understands your startup before doing anything — and asks follow-up questions if it doesn't.</p>
+        <span class="free-tag">Free</span>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">02</div>
+        <h3>Triage</h3>
+        <p>Your problem gets sharpened and routed, visibly, to the one domain that actually owns it — out of seven.</p>
+        <span class="free-tag">Free</span>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">03</div>
+        <h3>The board debates</h3>
+        <p>Four opposed experts draft independent positions, cross-examine once, and a Chair rules — with dissent preserved, not averaged away.</p>
+        <span class="free-tag">Free</span>
+      </div>
+      <div class="flow-step">
+        <div class="step-num">04</div>
+        <h3>Your perfect agent, or a real person</h3>
+        <p>Chat unlimited with the AI advisor built for this exact problem — or get matched with real individuals ready to take it on.</p>
+        <span class="paid-tag">Adviser tab is paid</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ WHAT YOU GET ============ -->
+<section id="get">
+  <div class="wrap">
+    <span class="section-kicker">What you get</span>
+    <h2 class="section-title">Not a recommendation — a recommendation plus the conditions under which it's wrong.</h2>
+
+    <div class="get-grid">
+      <div class="get-list">
+        <div class="get-item">
+          <div class="dot">✓</div>
+          <div>
+            <h4>Assumptions, exposed</h4>
+            <p>"Do X if A holds — it inverts if B." The decision usually hinges on one thing you haven't measured. Now you know which.</p>
+          </div>
+        </div>
+        <div class="get-item">
+          <div class="dot">✓</div>
+          <div>
+            <h4>Dissent, preserved</h4>
+            <p>Never averaged away. If one expert still disagrees with the ruling, you see exactly why — and what fact would decide who's right.</p>
+          </div>
+        </div>
+        <div class="get-item">
+          <div class="dot">✓</div>
+          <div>
+            <h4>A validation plan</h4>
+            <p>Concrete tests you can run this week to find out which side of the argument was actually correct.</p>
+          </div>
+        </div>
+        <div class="get-item">
+          <div class="dot">✓</div>
+          <div>
+            <h4>A real person, if you want one</h4>
+            <p>Matched to your exact problem and your budget — not a category tag, a real hourly rate and a real track record.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="verdict-panel">
+        <div class="verdict-row">
+          <span class="label">Verdict</span>
+          <span class="value">Raise to $12/seat, add a free tier capped at 3 users — if churn is retention-driven, invert.</span>
+        </div>
+        <div class="verdict-row">
+          <span class="label">Confidence</span>
+          <span class="value">Medium-high</span>
+        </div>
+        <div class="verdict-row">
+          <span class="label">If it fails</span>
+          <span class="value">Fix product first, not price. Cap infra costs harder if team size grows past 7 seats.</span>
+        </div>
+        <div class="verdict-row">
+          <span class="label">Dissent</span>
+          <span class="value">"A free tier is a bet, not a strategy. Measure free→paid conversion in 30 days or kill it."
+            <div class="dissent-tag">Unit-Economics Hawk</div>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MARKETPLACE ============ -->
+<section class="market" id="advisers">
+  <div class="wrap">
+    <span class="section-kicker">The Adviser tab</span>
+    <h2 class="section-title">Real individuals. Their own rate. No titled roles.</h2>
+    <p class="section-sub">Every adviser sets their own hourly rate and writes their own skills profile — we match on price and fit, and take a flat 10% on top. Starting in San Francisco.</p>
+
+    <div class="adviser-grid">
+      <div class="adviser-card">
+        <div class="adviser-top">
+          <div class="avatar"></div>
+          <div>
+            <div class="adviser-name">M. Okafor</div>
+            <div class="adviser-role">GTM &amp; PLG</div>
+          </div>
+        </div>
+        <p class="adviser-skill">Ex-growth lead, two Series A SaaS launches. Best at converting free users without wrecking margin.</p>
+        <div class="adviser-bottom">
+          <span class="adviser-rate">$250/hr</span>
+          <span class="adviser-est">Est. $430–575</span>
+        </div>
+      </div>
+      <div class="adviser-card">
+        <div class="adviser-top">
+          <div class="avatar"></div>
+          <div>
+            <div class="adviser-name">R. Delacroix</div>
+            <div class="adviser-role">Pricing &amp; Unit Economics</div>
+          </div>
+        </div>
+        <p class="adviser-skill">Former RevOps lead. Obsessed with CAC payback — will tell you if your model doesn't work before you ship it.</p>
+        <div class="adviser-bottom">
+          <span class="adviser-rate">$400/hr</span>
+          <span class="adviser-est">Est. $690–920</span>
+        </div>
+      </div>
+      <div class="adviser-card">
+        <div class="adviser-top">
+          <div class="avatar"></div>
+          <div>
+            <div class="adviser-name">S. Whitfield</div>
+            <div class="adviser-role">Commercial Contracts</div>
+          </div>
+        </div>
+        <p class="adviser-skill">California-barred attorney. Every deliverable reviewed and signed off personally before it reaches you.</p>
+        <div class="adviser-bottom">
+          <span class="adviser-rate">$450/hr</span>
+          <span class="adviser-est">Est. $500 flat review</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRICING ============ -->
+<section id="pricing">
+  <div class="wrap">
+    <span class="section-kicker">Pricing</span>
+    <h2 class="section-title">Free until you decide to hire someone. That's the whole model.</h2>
+
+    <div class="pricing-grid">
+      <div class="price-card">
+        <div class="price-tag">AI Board</div>
+        <div class="price-amount">$0<span>/forever</span></div>
+        <p class="price-desc">Unlimited threads, unlimited debate, unlimited chat with your matched perfect agent. No message caps, no trial period, no card required.</p>
+        <ul class="price-list">
+          <li><svg viewBox="0 0 16 16" fill="none"><path d="M13 4L6 12L3 9" stroke="#2f6f4f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>All 7 domains, full opposed-priors debate</li>
+          <li><svg viewBox="0 0 16 16" fill="none"><path d="M13 4L6 12L3 9" stroke="#2f6f4f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Verdict, assumptions, dissent, validation plan</li>
+          <li><svg viewBox="0 0 16 16" fill="none"><path d="M13 4L6 12L3 9" stroke="#2f6f4f" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Persistent context across every thread you open</li>
+        </ul>
+      </div>
+      <div class="price-card dark">
+        <div class="price-tag">Adviser Marketplace</div>
+        <div class="price-amount">10%<span>platform fee</span></div>
+        <p class="price-desc">Each adviser sets their own hourly rate. You see a real quote and a not-to-exceed estimate before you ever commit to anything.</p>
+        <ul class="price-list">
+          <li><svg viewBox="0 0 16 16" fill="none"><path d="M13 4L6 12L3 9" stroke="#7fd1a6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Top 3 matches by price fit and skills fit</li>
+          <li><svg viewBox="0 0 16 16" fill="none"><path d="M13 4L6 12L3 9" stroke="#7fd1a6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Never billed past the estimate without sign-off</li>
+          <li><svg viewBox="0 0 16 16" fill="none"><path d="M13 4L6 12L3 9" stroke="#7fd1a6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Adviser gets your full board history — no cold start</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CTA ============ -->
+<section class="cta">
+  <div class="wrap">
+    <h2>Every founder wants a real board. Yours convenes right now.</h2>
+    <button class="btn btn-dark" data-auth-trigger="sign-up">Ask your first question — free</button>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-inner">
+    <p>© 2026 Charter Consultancy. Built for founders, debated by design.</p>
+    <div class="footer-links">
+      <a href="#how-it-works">How It Works</a>
+      <a href="#domains">Domains</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ============ AUTH MODAL (simulated Clerk flow — no real account created; see swap-in notes in the script below) ============ -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-modal">
+    <button class="auth-close" id="authClose" aria-label="Close">✕</button>
+
+    <!-- Step 1: email / Google -->
+    <div class="auth-step" id="authStepEmail">
+      <span class="auth-demo-tag">Demo — no real account created</span>
+      <h3 id="authTitle">Sign up for Charter Consultancy</h3>
+      <p class="auth-sub" id="authSub">One free AI board, unlimited chat. No card required.</p>
+
+      <button class="auth-google-btn" id="authGoogleBtn">
+        <svg width="16" height="16" viewBox="0 0 16 16"><path fill="#4285F4" d="M15.5 8.18c0-.57-.05-1.11-.15-1.64H8v3.1h4.2a3.6 3.6 0 0 1-1.56 2.36v1.96h2.52c1.48-1.36 2.33-3.37 2.33-5.78Z"/><path fill="#34A853" d="M8 16c2.1 0 3.86-.7 5.15-1.9l-2.52-1.96c-.7.47-1.6.75-2.63.75-2.02 0-3.73-1.36-4.34-3.19H1.05v2.01A8 8 0 0 0 8 16Z"/><path fill="#FBBC05" d="M3.66 9.7A4.8 4.8 0 0 1 3.4 8c0-.59.1-1.16.26-1.7V4.29H1.05A8 8 0 0 0 0 8c0 1.29.31 2.51.85 3.7l2.8-2.01Z"/><path fill="#EA4335" d="M8 3.18c1.14 0 2.17.39 2.98 1.16l2.23-2.23A7.96 7.96 0 0 0 8 0 8 8 0 0 0 1.05 4.29l2.8 2.01C4.27 4.54 5.98 3.18 8 3.18Z"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="auth-divider">or</div>
+
+      <label class="auth-label">Email address</label>
+      <input type="email" class="auth-field" id="authEmail" placeholder="you@startup.com" />
+      <button class="auth-submit" id="authSubmit">Continue</button>
+
+      <p class="auth-footer-note">Secured by <strong>Clerk</strong></p>
+    </div>
+
+    <!-- Step 2: verification code -->
+    <div class="auth-step" id="authStepCode" style="display:none;">
+      <button class="auth-back" id="authBack" aria-label="Back">←</button>
+      <span class="auth-demo-tag">Demo — code is not actually emailed</span>
+      <h3>Check your email</h3>
+      <p class="auth-sub">Enter the 6-digit code we sent to <strong id="authEmailEcho">you@startup.com</strong></p>
+
+      <div class="auth-code-row" id="authCodeRow">
+        <input maxlength="1" class="auth-code-box" data-i="0" inputmode="numeric" />
+        <input maxlength="1" class="auth-code-box" data-i="1" inputmode="numeric" />
+        <input maxlength="1" class="auth-code-box" data-i="2" inputmode="numeric" />
+        <input maxlength="1" class="auth-code-box" data-i="3" inputmode="numeric" />
+        <input maxlength="1" class="auth-code-box" data-i="4" inputmode="numeric" />
+        <input maxlength="1" class="auth-code-box" data-i="5" inputmode="numeric" />
+      </div>
+
+      <button class="auth-submit" id="authVerify">Verify</button>
+      <p class="auth-resend">Didn't get a code? <a href="#" id="authResend">Resend</a></p>
+      <p class="auth-footer-note">Secured by <strong>Clerk</strong></p>
+    </div>
+
+    <!-- Step 3: success -->
+    <div class="auth-step auth-step-success" id="authStepSuccess" style="display:none;">
+      <div class="auth-check">✓</div>
+      <h3>You're in</h3>
+      <p class="auth-sub">Setting up your board…</p>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PROTOTYPE APP SHELL (portal layout) ============ -->
+<div class="app-shell" id="appShell">
+
+  <div class="app-sidebar">
+    <div class="app-sidebar-logo">
+      <span class="logo-mark">
+        <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 0L7.4 4.2L11.5 5.5L7.4 6.8L6 11L4.6 6.8L0.5 5.5L4.6 4.2L6 0Z" fill="white"/></svg>
+      </span>
+      Charter Consultancy
+    </div>
+
+    <button class="app-new-thread" id="appNewThreadBtn">+ New thread</button>
+
+    <nav class="app-sidebar-nav">
+      <a class="active">☰ Threads</a>
+      <a>👤 Invite teammate</a>
+    </nav>
+
+    <div class="app-sidebar-section-label">Recent threads</div>
+    <div class="app-recent-threads" id="appRecentThreads">
+      <div class="app-thread-item active" id="appThreadItem">Untitled thread</div>
+    </div>
+
+    <div class="app-sidebar-bottom">
+      <button class="app-collapse">⤢ Collapse</button>
+      <div class="app-sidebar-user">
+        <span class="avatar-sm"></span>
+        <div>
+          <div class="u-email" id="appUserEmail">you@startup.com</div>
+          <div class="u-org" id="appLogout" style="cursor:pointer;">Log out</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-main">
+    <div class="app-banner">Boards convene instantly. Everything through the perfect agent is free — you only pay if you choose to book a real adviser.</div>
+
+    <div class="app-header-row">
+      <button class="app-back" id="appBackBtn" aria-label="Back">←</button>
+      <div class="app-header-title" id="appThreadTitle">Untitled thread</div>
+      <div class="app-header-actions">
+        <button class="app-header-btn">✓ Done</button>
+        <button class="app-header-btn ghost">Share thread</button>
+      </div>
+    </div>
+
+    <div class="app-thread-scroll" id="appThreadScroll">
+      <!-- messages injected by JS in enterApp() -->
+    </div>
+
+    <div class="app-composer">
+      <div class="app-composer-inner">
+        <textarea class="app-composer-input" id="appComposerInput" placeholder="Ask your board about this problem…" rows="2"></textarea>
+        <div class="app-composer-bottom">
+          <div class="app-composer-tools">
+            <button class="app-composer-chip">+ Upload</button>
+            <div class="app-composer-toggle">
+              <button class="toggle-pill active" data-mode="ai" id="toggleAI">🤖 Perfect Agent</button>
+              <button class="toggle-pill" data-mode="adviser" id="toggleAdviser">🧑‍💼 Adviser <span class="paid-dot"></span></button>
+            </div>
+          </div>
+          <button class="app-composer-send" id="appComposerSend" aria-label="Send">→</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+  AUTH — demo mode.
+  Charter Consultancy's real backend already has a `CLERK_DEMO_AUTH` fallback pattern
+  (see charter-law-fork-agent-super-prompt.md §3) for exactly this situation: real Clerk
+  wired in code, but no publishable key issued yet. This block mirrors that pattern on
+  the frontend.
+
+  TO GO LIVE WITH REAL CLERK:
+  1. Add:  <script async crossorigin="anonymous" data-clerk-publishable-key="pk_live_XXXX"
+             src="https://YOUR-DOMAIN.clerk.accounts.dev/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"><\/script>
+     before this script tag.
+  2. Replace the body of `openAuth()` with:
+       await window.Clerk.load();
+       mode === 'sign-up' ? window.Clerk.openSignUp({ afterSignUpUrl: '#app' })
+                           : window.Clerk.openSignIn({ afterSignInUrl: '#app' });
+  3. Replace `completeDemoAuth()`'s call site with Clerk's session callback instead of
+     the submit-button click handler.
+  Everything else (the app-shell handoff, the captured problem text) stays the same.
+*/
+
+(function () {
+  const overlay = document.getElementById('authOverlay');
+  const closeBtn = document.getElementById('authClose');
+
+  // Step 1 — email
+  const stepEmail = document.getElementById('authStepEmail');
+  const title = document.getElementById('authTitle');
+  const sub = document.getElementById('authSub');
+  const emailField = document.getElementById('authEmail');
+  const googleBtn = document.getElementById('authGoogleBtn');
+  const submitBtn = document.getElementById('authSubmit');
+
+  // Step 2 — code
+  const stepCode = document.getElementById('authStepCode');
+  const authEmailEcho = document.getElementById('authEmailEcho');
+  const codeBoxes = Array.prototype.slice.call(document.querySelectorAll('.auth-code-box'));
+  const verifyBtn = document.getElementById('authVerify');
+  const resendLink = document.getElementById('authResend');
+  const backBtn = document.getElementById('authBack');
+
+  // Step 3 — success
+  const stepSuccess = document.getElementById('authStepSuccess');
+
+  // App shell
+  const appShell = document.getElementById('appShell');
+  const appUserEmail = document.getElementById('appUserEmail');
+  const appLogout = document.getElementById('appLogout');
+  const appThreadTitle = document.getElementById('appThreadTitle');
+  const appThreadItem = document.getElementById('appThreadItem');
+  const appThreadScroll = document.getElementById('appThreadScroll');
+  const appBackBtn = document.getElementById('appBackBtn');
+  const appNewThreadBtn = document.getElementById('appNewThreadBtn');
+  const toggleAI = document.getElementById('toggleAI');
+  const toggleAdviser = document.getElementById('toggleAdviser');
+  const appComposerInput = document.getElementById('appComposerInput');
+  const appComposerSend = document.getElementById('appComposerSend');
+  const heroInput = document.getElementById('heroProblemInput');
+
+  let pendingProblem = '';
+  let pendingEmail = '';
+
+  function showStep(step) {
+    [stepEmail, stepCode, stepSuccess].forEach(function (el) { el.style.display = 'none'; });
+    step.style.display = 'block';
+  }
+
+  // Prototype: skip the whole auth ceremony and drop straight into the app.
+  // Set SKIP_AUTH = false to get the email/code modal back.
+  const SKIP_AUTH = false;
+
+  function openAuth(mode, problemText) {
+    pendingProblem = problemText || '';
+
+    if (SKIP_AUTH) {
+      pendingEmail = 'you@startup.com';
+      enterApp(pendingEmail, pendingProblem);
+      return;
+    }
+
+    if (mode === 'sign-up') {
+      title.textContent = 'Sign up for Charter Consultancy';
+      sub.textContent = 'One free AI board, unlimited chat. No card required.';
+    } else {
+      title.textContent = 'Log in to Charter Consultancy';
+      sub.textContent = 'Welcome back — pick up any thread where you left it.';
+    }
+    emailField.value = '';
+    codeBoxes.forEach(function (b) { b.value = ''; });
+    overlay.classList.add('open');
+    showStep(stepEmail);
+    emailField.focus();
+  }
+
+  function closeAuth() {
+    overlay.classList.remove('open');
+  }
+
+  // Step 1 -> Step 2: "send" the code (simulated — nothing is actually emailed)
+  function goToCodeStep(email) {
+    pendingEmail = email && email.trim() ? email.trim() : 'you@startup.com';
+    authEmailEcho.textContent = pendingEmail;
+    showStep(stepCode);
+    codeBoxes.forEach(function (b) { b.value = ''; });
+    codeBoxes[0].focus();
+  }
+
+  // Google is treated as an instant round trip straight to the success step —
+  // real Clerk would redirect to Google and back; here we just skip ahead.
+  googleBtn.addEventListener('click', function () {
+    pendingEmail = 'you@gmail.com';
+    finishAuth();
+  });
+
+  submitBtn.addEventListener('click', function () {
+    if (!emailField.value.trim()) { emailField.focus(); return; }
+    goToCodeStep(emailField.value);
+  });
+
+  emailField.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      if (!emailField.value.trim()) return;
+      goToCodeStep(emailField.value);
+    }
+  });
+
+  backBtn.addEventListener('click', function () {
+    showStep(stepEmail);
+  });
+
+  resendLink.addEventListener('click', function (e) {
+    e.preventDefault();
+    resendLink.textContent = 'Sent!';
+    setTimeout(function () { resendLink.textContent = 'Resend'; }, 1800);
+  });
+
+  // Code boxes: auto-advance on input, auto-backspace to previous box, auto-verify on 6th digit.
+  codeBoxes.forEach(function (box, i) {
+    box.addEventListener('input', function () {
+      box.value = box.value.replace(/[^0-9]/g, '').slice(0, 1);
+      if (box.value && i < codeBoxes.length - 1) {
+        codeBoxes[i + 1].focus();
+      }
+      if (box.value && i === codeBoxes.length - 1) {
+        checkCodeComplete();
+      }
+    });
+    box.addEventListener('keydown', function (e) {
+      if (e.key === 'Backspace' && !box.value && i > 0) {
+        codeBoxes[i - 1].focus();
+      }
+    });
+  });
+
+  function checkCodeComplete() {
+    const complete = codeBoxes.every(function (b) { return b.value.length === 1; });
+    if (complete) verifyNow();
+  }
+
+  function verifyNow() {
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying…';
+    setTimeout(function () { finishAuth(); }, 500); // simulated network round trip
+  }
+
+  verifyBtn.addEventListener('click', function () {
+    const complete = codeBoxes.every(function (b) { return b.value.length === 1; });
+    if (!complete) { codeBoxes[0].focus(); return; }
+    verifyNow();
+  });
+
+  function finishAuth() {
+    showStep(stepSuccess);
+    setTimeout(function () {
+      closeAuth();
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify';
+      enterApp(pendingEmail, pendingProblem);
+    }, 700);
+  }
+
+  function timeNow() {
+    return new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  }
+
+  function msgHtml(opts) {
+    // opts: { avatar, avatarDark, name, badge, badgePaid, time, text, isSystem, isDisclaimer }
+    const avatarClass = 'msg-avatar' + (opts.avatarDark ? ' dark' : '');
+    const badgeHtml = opts.badge
+      ? '<span class="msg-badge' + (opts.badgePaid ? ' paid' : '') + '">' + opts.badge + '</span>'
+      : '';
+    const timeHtml = opts.time ? '<span class="msg-time">' + opts.time + '</span>' : '';
+    const bodyClass = opts.isDisclaimer ? 'msg-disclaimer' : (opts.isHighlight ? 'msg-highlight' : '');
+    const textClass = 'msg-text' + (opts.isSystem ? ' muted' : '');
+
+    return (
+      '<div class="msg' + (opts.isSystem ? ' system' : '') + '">' +
+        '<div class="' + avatarClass + '">' + (opts.avatar || '') + '</div>' +
+        '<div class="msg-body">' +
+          (opts.isSystem ? '' : '<div class="msg-head"><span class="msg-name">' + opts.name + '</span>' + badgeHtml + timeHtml + '</div>') +
+          '<div class="' + bodyClass + '"><p class="' + textClass + '">' + opts.text + '</p></div>' +
+        '</div>' +
+      '</div>'
+    );
+  }
+
+  function enterApp(email, problemText) {
+    appUserEmail.textContent = email;
+
+    const problem = problemText && problemText.trim() ? problemText.trim() : 'a founder problem';
+    const title = problem.length > 42 ? problem.slice(0, 42) + '…' : problem;
+    appThreadTitle.textContent = title;
+    appThreadItem.textContent = title;
+
+    let html = '';
+
+    html += msgHtml({
+      avatar: '\uD83D\uDCAC',
+      isSystem: true,
+      text: '<strong>' + escapeHtml(email) + '</strong> opened a new problem thread' +
+            (problemText && problemText.trim() ? ':<div class="msg-codeblock">' + escapeHtml(problemText.trim()) + '</div>' : '.') +
+            'Your board is convening. Rounds 1–3 run automatically — everything through the perfect agent is free.'
+    });
+
+    html += msgHtml({
+      avatar: '\uD83E\uDDED',
+      avatarDark: true,
+      name: 'Round 1 — Context',
+      badge: 'AI Board',
+      time: timeNow(),
+      text: 'Before anything moves forward, the board checks whether it fully understands your startup. A few basics to ground every round downstream: how many users or customers do you have today, what\'s your current MRR or funding stage, who exactly is the customer, how big is the team, and what does success look like? This builds your business-context profile — your later threads reuse it instead of asking again. If the board isn\'t satisfied it understands you, it asks targeted follow-ups rather than proceeding on a thin profile.'
+    });
+
+    html += msgHtml({
+      avatar: '\uD83D\uDD00',
+      avatarDark: true,
+      name: 'Round 2 — Problem definition & triage',
+      badge: 'AI Board',
+      time: timeNow(),
+      text: 'With real context in hand, a small board sharpens what your actual problem is and routes it to the single domain that owns it — one of seven: <strong>pricing strategy, fundraising, go-to-market, pitch &amp; messaging, legal &amp; compliance, resources &amp; location, or developer/engineering</strong>. This routing decision is made visibly here, not by a silent classifier.'
+    });
+
+    html += msgHtml({
+      avatar: '⚖️',
+      avatarDark: true,
+      name: 'Round 3 — Domain board',
+      badge: 'AI Board',
+      time: timeNow(),
+      text: 'Four experts with genuinely opposed priors (for pricing: a Value Pricer, a PLG Advocate, a Unit-Economics Hawk, plus a fourth lens) draft independent positions against real evidence, cross-examine each other once, and a Chair rules — preserving dissent instead of averaging it away. Every verdict names its own assumptions (\u201cif X holds, do A; if it fails, do B\u201d) and includes a validation plan. For legal problems, this feeds the contract pipeline: template selected, AI-drafted redline, and nothing is delivered without a barred attorney\'s approval.'
+    });
+
+    html += msgHtml({
+      avatar: '\uD83E\uDD16',
+      avatarDark: true,
+      name: 'Your perfect agent',
+      badge: 'Free · unlimited',
+      time: timeNow(),
+      isHighlight: true,
+      text: 'Once the panel rules, its output is synthesized into a single best-fit advisor for this thread — me. Chat as much as you like: no limits, no price, ever. If you want a real human on this, switch to the <strong>Adviser</strong> tab below — around 3 ranked individuals matched to this exact problem, each priced from their own hourly rate × the real hours this needs. That\'s the only paid moment in the whole product.'
+    });
+
+    html += msgHtml({
+      avatar: 'ⓘ',
+      name: 'Charter Consultancy',
+      badge: 'Not final advice',
+      time: '',
+      isDisclaimer: true,
+      text: 'This AI board provides general, opposed-priors analysis to help you reason about your problem. It is preparation, not a substitute for a licensed professional where one is required (legal deliverables are reviewed and approved by a barred attorney before delivery). Switch to the Adviser tab at any time to bring in a real, matched individual.'
+    });
+
+    appThreadScroll.innerHTML = html;
+    appThreadScroll.scrollTop = 0;
+
+    appShell.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function exitApp() {
+    appShell.classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // Toggle between the free AI Agent and the paid Adviser composer mode.
+  function setComposerMode(mode) {
+    toggleAI.classList.toggle('active', mode === 'ai');
+    toggleAdviser.classList.toggle('active', mode === 'adviser');
+    appComposerInput.placeholder = mode === 'ai'
+      ? 'Ask your perfect agent about this problem…'
+      : 'Describe what you need — we\'ll match you with ~3 real advisers…';
+  }
+  toggleAI.addEventListener('click', function () { setComposerMode('ai'); });
+  toggleAdviser.addEventListener('click', function () { setComposerMode('adviser'); });
+
+  // Sending a message in the prototype just appends it to the thread — no real board runs yet.
+  function sendComposerMessage() {
+    const text = appComposerInput.value.trim();
+    if (!text) return;
+    const mode = toggleAdviser.classList.contains('active') ? 'adviser' : 'ai';
+    appThreadScroll.insertAdjacentHTML('beforeend', msgHtml({
+      avatar: '🙂',
+      name: 'You',
+      time: timeNow(),
+      text: escapeHtml(text)
+    }));
+    appComposerInput.value = '';
+    if (mode === 'ai') {
+      appThreadScroll.insertAdjacentHTML('beforeend', msgHtml({
+        avatar: '\uD83E\uDD16',
+        avatarDark: true,
+        name: 'Perfect Agent',
+        badge: 'AI Board',
+        time: timeNow(),
+        text: 'Prototype only — this is where the perfect agent\'s live response would appear, grounded in your Round 1–3 context, triage, and verdict.'
+      }));
+    } else {
+      appThreadScroll.insertAdjacentHTML('beforeend', msgHtml({
+        avatar: '\uD83E\uDDD1',
+        name: 'Adviser matching',
+        badge: 'Adviser',
+        badgePaid: true,
+        time: timeNow(),
+        isHighlight: true,
+        text: 'Prototype only — this is where your top ~3 matched advisers appear: real individuals (launching in San Francisco), each with a self-set hourly rate and skills profile, quoted at rate × the panel\'s real-hours estimate plus a flat 10% platform fee. The estimate you book at is a not-to-exceed cap.'
+      }));
+    }
+    appThreadScroll.scrollTop = appThreadScroll.scrollHeight;
+  }
+  appComposerSend.addEventListener('click', sendComposerMessage);
+  appComposerInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendComposerMessage();
+    }
+  });
+
+  appBackBtn.addEventListener('click', exitApp);
+  appNewThreadBtn.addEventListener('click', function () {
+    enterApp(appUserEmail.textContent, '');
+    setComposerMode('ai');
+  });
+
+  // Wire every [data-auth-trigger] button on the page.
+  document.querySelectorAll('[data-auth-trigger]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      const mode = btn.getAttribute('data-auth-trigger');
+      const fromQuery = btn.getAttribute('data-from-query') === 'true';
+      const problemText = fromQuery && heroInput ? heroInput.value : '';
+      openAuth(mode, problemText);
+    });
+  });
+
+  closeBtn.addEventListener('click', closeAuth);
+  overlay.addEventListener('click', function (e) {
+    if (e.target === overlay) closeAuth();
+  });
+
+  appLogout.addEventListener('click', exitApp);
+
+  // Enter key in the hero box also kicks off sign-up, same as clicking submit.
+  if (heroInput) {
+    heroInput.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        openAuth('sign-up', heroInput.value);
+      }
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Charter Consultancy — Every Answer, Debated First</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&family=Fustat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --color-black: #000000;
+    --color-gray-text: #505050;
+    --color-light-bg: #f8f8f8;
+    --color-green-upgrade: rgba(90, 225, 76, 0.89);
+    --color-dark-badge: #0e1311;
+    --color-white: #ffffff;
+    --color-overlay: rgba(0, 0, 0, 0.24);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+    font-family: 'Inter', sans-serif;
+    color: var(--color-black);
+    background: #000;
+  }
+
+  .hero {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    min-height: 720px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---------- Video background ---------- */
+  .video-bg-wrap {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background: #0e1311; /* fallback while video loads/fades */
+  }
+
+  .video-bg-wrap video {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 115%;
+    height: 115%;
+    object-fit: cover;
+    object-position: top;
+    opacity: 0; /* controlled entirely by JS fade system */
+    will-change: opacity;
+  }
+
+  .video-scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.25) 100%);
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* ---------- Navigation ---------- */
+  .navbar {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 120px;
+  }
+
+  .logo {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 24px;
+    letter-spacing: -1.44px;
+    color: var(--color-white);
+  }
+
+  .nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 34px;
+  }
+
+  .nav-menu a {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: -0.2px;
+    color: var(--color-white);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0.92;
+    transition: opacity 0.15s ease;
+  }
+  .nav-menu a:hover { opacity: 1; }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .btn {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    letter-spacing: -0.1px;
+    border: none;
+    border-radius: 999px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .btn-signup {
+    width: 82px;
+    background: transparent;
+    color: var(--color-white);
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+
+  .btn-login {
+    width: 101px;
+    background: var(--color-black);
+    color: var(--color-white);
+  }
+
+  /* ---------- Hero content ---------- */
+  .hero-content {
+    position: relative;
+    z-index: 10;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0 120px;
+    margin-top: -50px;
+    gap: 60px;
+  }
+
+  .hero-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.92);
+    border-radius: 999px;
+    padding: 6px 14px 6px 6px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  }
+
+  .badge-new {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--color-dark-badge);
+    color: var(--color-white);
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+
+  .badge-new svg { width: 12px; height: 12px; }
+
+  .badge-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #1a1a1a;
+  }
+
+  .hero-headline {
+    font-family: 'Fustat', sans-serif;
+    font-weight: 700;
+    font-size: 80px;
+    letter-spacing: -4.8px;
+    line-height: 1;
+    color: var(--color-black);
+    text-align: center;
+    margin-top: 34px;
+    max-width: 900px;
+  }
+
+  .hero-headline .highlight {
+    color: var(--color-black);
+  }
+
+  .hero-subtitle {
+    font-family: 'Fustat', sans-serif;
+    font-weight: 500;
+    font-size: 20px;
+    letter-spacing: -0.4px;
+    color: var(--color-gray-text);
+    text-align: center;
+    max-width: 736px;
+    width: 542px;
+    margin-top: 34px;
+  }
+
+  /* ---------- Search / query box ---------- */
+  .query-box {
+    width: 100%;
+    max-width: 728px;
+    min-height: 200px;
+    border-radius: 18px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: var(--color-overlay);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .query-top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 4px;
+  }
+
+  .credits-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .credits-label {
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--color-white);
+  }
+
+  .upgrade-btn {
+    background: var(--color-green-upgrade);
+    color: #06210a;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 600;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+  }
+
+  .powered-by {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Schibsted Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    color: var(--color-white);
+    opacity: 0.85;
+  }
+  .powered-by svg { width: 14px; height: 14px; }
+
+  .query-input-area {
+    background: var(--color-white);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+    padding: 16px 16px 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    flex: 1;
+  }
+
+  .query-input-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .query-placeholder {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    color: rgba(0,0,0,0.6);
+    flex: 1;
+    padding-top: 4px;
+  }
+
+  .submit-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 999px;
+    background: var(--color-black);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+  }
+  .submit-btn svg { width: 16px; height: 16px; }
+
+  .query-bottom-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .query-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .action-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--color-light-bg);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-family: 'Noto Sans', sans-serif;
+    font-weight: 500;
+    font-size: 12px;
+    color: #333;
+    border: none;
+    cursor: pointer;
+  }
+  .action-chip svg { width: 14px; height: 14px; }
+
+  .char-counter {
+    font-family: 'Noto Sans', sans-serif;
+    font-size: 12px;
+    color: #9a9a9a;
+  }
+
+  @media (max-width: 900px) {
+    .navbar { padding: 16px 24px; }
+    .hero-content { padding: 0 24px; }
+    .nav-menu { display: none; }
+    .hero-headline { font-size: 44px; letter-spacing: -2px; }
+    .hero-subtitle { width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<section class="hero">
+  <div class="video-bg-wrap">
+    <video id="heroVideo" muted playsinline preload="auto">
+      <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260329_050842_be71947f-f16e-4a14-810c-06e83d23ddb5.mp4" type="video/mp4" />
+    </video>
+    <div class="video-scrim"></div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="navbar">
+    <div class="logo">Charter Consultancy</div>
+    <div class="nav-menu">
+      <a href="#how-it-works">How It Works</a>
+      <a href="#domains">
+        Domains
+        <svg viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1.5L6 6.5L11 1.5" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <a href="#advisers">Advisers</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-signup">Sign Up</button>
+      <button class="btn btn-login">Log In</button>
+    </div>
+  </nav>
+
+  <!-- Hero content -->
+  <div class="hero-content">
+    <div class="hero-header">
+      <div class="badge">
+        <span class="badge-new">
+          <svg viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 0L7.35 4.15L11.5 5.5L7.35 6.85L6 11L4.65 6.85L0.5 5.5L4.65 4.15L6 0Z" fill="white"/></svg>
+          New
+        </span>
+        <span class="badge-text">Free AI board, real experts on demand</span>
+      </div>
+
+      <h1 class="hero-headline">Every Answer,<br />Debated First.</h1>
+
+      <p class="hero-subtitle">Describe your problem once. Watch AI experts with opposing views debate it live, then get matched with the real professional who's right for you — free until you're ready to hire.</p>
+    </div>
+
+    <!-- Search / query box -->
+    <div class="query-box">
+      <div class="query-top-row">
+        <div class="credits-left">
+          <span class="credits-label">Unlimited AI advice, always free</span>
+        </div>
+        <div class="powered-by">
+          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 0L9.8 5.2L15 7L9.8 8.8L8 14L6.2 8.8L1 7L6.2 5.2L8 0Z" fill="white"/></svg>
+          Powered by Claude
+        </div>
+      </div>
+
+      <div class="query-input-area">
+        <div class="query-input-row">
+          <div class="query-placeholder">What's your biggest startup problem right now?</div>
+          <button class="submit-btn" aria-label="Submit">
+            <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 13V3M8 3L3 8M8 3L13 8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="query-bottom-row">
+          <div class="query-actions">
+            <button class="action-chip">
+              <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 4L4.5 9C3.9 9.6 3.9 10.6 4.5 11.2C5.1 11.8 6.1 11.8 6.7 11.2L11.2 6.7C12.4 5.5 12.4 3.5 11.2 2.3C10 1.1 8 1.1 6.8 2.3L2.3 6.8" stroke="#333" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Attach
+            </button>
+            <button class="action-chip">
+              <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="1" width="4" height="7" rx="2" stroke="#333" stroke-width="1.2"/><path d="M2.5 6.5C2.5 9 4.5 11 7 11C9.5 11 11.5 9 11.5 6.5" stroke="#333" stroke-width="1.2" stroke-linecap="round"/><path d="M7 11V13" stroke="#333" stroke-width="1.2" stroke-linecap="round"/></svg>
+              Voice
+            </button>
+            <button class="action-chip">
+              <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="4.5" stroke="#333" stroke-width="1.2"/><path d="M9.5 9.5L12.5 12.5" stroke="#333" stroke-width="1.2" stroke-linecap="round"/></svg>
+              Examples
+            </button>
+          </div>
+          <div class="char-counter">0/3,000</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  const video = document.getElementById('heroVideo');
+
+  let rafId = null;
+  let fadingOutRef = false;
+  const FADE_MS = 250;
+  const FADE_OUT_THRESHOLD = 0.55; // seconds remaining before end
+
+  function cancelActiveFade() {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  }
+
+  function fadeTo(targetOpacity, duration, onComplete) {
+    cancelActiveFade();
+    const startOpacity = parseFloat(getComputedStyle(video).opacity) || 0;
+    const startTime = performance.now();
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / duration, 1);
+      const eased = t; // linear; swap for easeInOutQuad if desired
+      video.style.opacity = startOpacity + (targetOpacity - startOpacity) * eased;
+
+      if (t < 1) {
+        rafId = requestAnimationFrame(step);
+      } else {
+        rafId = null;
+        video.style.opacity = targetOpacity;
+        if (onComplete) onComplete();
+      }
+    }
+    rafId = requestAnimationFrame(step);
+  }
+
+  function fadeIn() {
+    fadingOutRef = false;
+    fadeTo(1, FADE_MS);
+  }
+
+  function fadeOut() {
+    if (fadingOutRef) return; // already fading out, don't re-trigger
+    fadingOutRef = true;
+    fadeTo(0, FADE_MS);
+  }
+
+  video.addEventListener('loadeddata', function () {
+    video.play().catch(function () {});
+    fadeIn();
+  });
+
+  video.addEventListener('timeupdate', function () {
+    if (!video.duration || isNaN(video.duration)) return;
+    const remaining = video.duration - video.currentTime;
+    if (remaining <= FADE_OUT_THRESHOLD) {
+      fadeOut();
+    }
+  });
+
+  video.addEventListener('ended', function () {
+    cancelActiveFade();
+    video.style.opacity = 0;
+    setTimeout(function () {
+      video.currentTime = 0;
+      video.play().catch(function () {});
+      fadeIn();
+    }, 100);
+  });
+
+  // Safety net: some browsers fire 'ended' inconsistently on short muted loops.
+  video.addEventListener('seeked', function () {
+    if (video.currentTime < 0.05 && fadingOutRef) {
+      fadingOutRef = false;
+    }
+  });
+})();
+</script>
+
+</body>
+</html>

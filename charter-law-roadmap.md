@@ -3,7 +3,7 @@
 > Working name: **Charter Law** (domain: `charterlaw.services`). Treated as settled for now.
 > Owner: Rhys — **solo founder, non-technical but good at vibe-coding** (building the software himself with Claude Code / AI assistance, no separate developer).
 > Legal: one **reviewing attorney, paid per completed matter** (a contractor / cost-of-goods, not a salaried hire).
-> Status: **BUILDING** — living document. The engineering foundation is now merged to `main` (see Build Progress below).
+> Status: **SUPERSEDED as the live plan by `advice-roadmap.md`** (the marketplace/advisory-board pivot). This document is kept as the detailed reference for the legal vertical and the engineering foundation, which the pivot reuses almost entirely — see `advice-roadmap.md` §2 for what carries over. The engineering foundation described below is merged to `main` (see Build Progress below).
 
 ---
 

@@ -31,7 +31,7 @@ export function LandingPage() {
             <a className="primary-action" href="#intake">
               Send a contract <ArrowRight aria-hidden="true" size={18} />
             </a>
-            <a className="secondary-action" href="/portal">
+            <a className="secondary-action" href="/login">
               Open client portal
             </a>
           </div>
@@ -124,8 +124,8 @@ export function LandingPage() {
             every client behind authenticated access.
           </p>
         </div>
-        <a className="secondary-action dark" href="/portal">
-          View portal shell
+        <a className="secondary-action dark" href="/login">
+          Sign in to the portal
         </a>
       </section>
 

@@ -1,3 +1,7 @@
+import { SignUpButton } from "@clerk/clerk-react";
+
+const clerkEnabled = Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+
 export function SiteHeader() {
   return (
     <header className="site-header">
@@ -15,9 +19,33 @@ export function SiteHeader() {
         <a href="/portal">Portal</a>
         <a href="/attorney">Attorney</a>
       </nav>
-      <a className="header-action" href="/#intake">
-        Send a contract
-      </a>
+      <div className="header-actions">
+        <a className="header-signin" href="/login">
+          Sign in
+        </a>
+        <SignUpAction />
+        <a className="header-action" href="/#intake">
+          Send a contract
+        </a>
+      </div>
     </header>
+  );
+}
+
+function SignUpAction() {
+  if (!clerkEnabled) {
+    return (
+      <a className="header-signup" href="/portal">
+        Sign up
+      </a>
+    );
+  }
+
+  return (
+    <SignUpButton forceRedirectUrl="/portal" mode="modal">
+      <button className="header-signup" type="button">
+        Sign up
+      </button>
+    </SignUpButton>
   );
 }
