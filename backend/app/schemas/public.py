@@ -1,7 +1,14 @@
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+
+# Plain-regex email type: avoids the optional email-validator dependency, which is
+# not in uv.lock and therefore absent from serverless builds.
+EmailAddress = Annotated[
+    str,
+    StringConstraints(pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$", max_length=320),
+]
 
 FindingSeverity = Literal["info", "warning"]
 FindingType = Literal[
@@ -41,7 +48,7 @@ class PublicIntakeRequest(BaseModel):
     model_config = ConfigDict(populate_by_name=True, str_strip_whitespace=True)
 
     name: str = Field(min_length=2, max_length=256)
-    email: EmailStr = Field(max_length=320)
+    email: EmailAddress
     company: str = Field(min_length=2, max_length=256)
     contract_type: str = Field(validation_alias="contractType", min_length=2, max_length=128)
     urgency: PublicIntakeUrgency
