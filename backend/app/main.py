@@ -8,14 +8,20 @@ from app.config import load_settings, validate_settings
 from app.db.session import SessionLocal, run_migrations
 from app.middleware.public_hardening import PublicEndpointHardeningMiddleware
 from app.observability import RequestIdMiddleware, init_sentry
-from app.routers import attorney, matters, playbooks, public, reports, users
+from app.routers import attorney, matters, playbooks, public, reports, threads, users
 from app.services.matter_service import matter_service
 
 app = FastAPI(title="Charter Law API", version="0.1.0")
 
+allowed_origins = [
+    origin.strip()
+    for origin in os.getenv("ALLOWED_ORIGINS", "http://127.0.0.1:5173,http://localhost:5173").split(",")
+    if origin.strip()
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+    allow_origins=allowed_origins,
+    allow_origin_regex=os.getenv("ALLOWED_ORIGIN_REGEX", r"https://.*\.vercel\.app"),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,9 +61,13 @@ def health_ready() -> dict[str, str]:
     return {"status": "ready"}
 
 
-app.include_router(users.router, prefix="/v1")
-app.include_router(attorney.router, prefix="/v1")
-app.include_router(playbooks.router, prefix="/v1")
-app.include_router(matters.router, prefix="/v1")
-app.include_router(reports.router, prefix="/v1")
-app.include_router(public.router, prefix="/v1")
+# "/v1" for direct access; "/api/v1" so the same app works behind Vercel's
+# "/api(/.*)" service rewrite, which forwards the original path.
+for _prefix in ("/v1", "/api/v1"):
+    app.include_router(users.router, prefix=_prefix)
+    app.include_router(attorney.router, prefix=_prefix)
+    app.include_router(playbooks.router, prefix=_prefix)
+    app.include_router(matters.router, prefix=_prefix)
+    app.include_router(reports.router, prefix=_prefix)
+    app.include_router(public.router, prefix=_prefix)
+    app.include_router(threads.router, prefix=_prefix)

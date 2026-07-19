@@ -13,6 +13,36 @@ import {
   submitPublicIntake,
 } from "../../lib/publicApi";
 
+function ProblemBox() {
+  const [problem, setProblem] = useState("");
+
+  function go() {
+    const target = `/app${problem.trim() ? `?problem=${encodeURIComponent(problem.trim())}` : ""}`;
+    window.location.assign(target);
+  }
+
+  return (
+    <div className="hero-problem-box">
+      <textarea
+        value={problem}
+        onChange={(e) => setProblem(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            go();
+          }
+        }}
+        placeholder="What's your biggest startup problem right now?"
+        rows={3}
+        aria-label="Describe your problem"
+      />
+      <button className="primary-action" type="button" onClick={go}>
+        Convene your board <ArrowRight aria-hidden="true" size={18} />
+      </button>
+    </div>
+  );
+}
+
 export function LandingPage() {
   return (
     <main>
@@ -20,17 +50,15 @@ export function LandingPage() {
 
       <section className="hero" id="top">
         <div className="hero-copy">
-          <h1>Outside counsel that scales like software.</h1>
+          <h1>Every answer, debated first.</h1>
           <p>
-            Charter Law provides attorney-reviewed contract redlines for startup
-            teams. Send a contract through the portal, email, or Slack-style
-            intake, get a flat fee, and receive practical markup approved by a
-            reviewing attorney.
+            Describe your problem once. A board of AI advisors with genuinely
+            opposed views argues it out — context, triage, then a four-expert
+            debate whose verdict preserves dissent. Free through the perfect
+            agent; pay only if you book a real adviser.
           </p>
+          <ProblemBox />
           <div className="hero-actions">
-            <a className="primary-action" href="#intake">
-              Send a contract <ArrowRight aria-hidden="true" size={18} />
-            </a>
             <a className="secondary-action" href="/login">
               Open client portal
             </a>

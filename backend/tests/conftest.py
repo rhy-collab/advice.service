@@ -1,10 +1,21 @@
+import os
 from collections.abc import Iterator
 
 import pytest
+
+# Tests must be hermetic: never let a developer's backend/.env (loaded by
+# app.config) route AI-prep or board calls to the real Anthropic API.
+os.environ.pop("ANTHROPIC_API_KEY", None)
+
+
+@pytest.fixture(autouse=True)
+def _no_real_anthropic(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
 from sqlalchemy import StaticPool, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.db.session import Base
+import app.models.board  # noqa: F401
 import app.models.intake  # noqa: F401
 import app.models.matter  # noqa: F401
 import app.models.playbook  # noqa: F401

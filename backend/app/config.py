@@ -1,6 +1,25 @@
 """Typed application settings + production validation (fail closed)."""
 import os
 from dataclasses import dataclass
+from pathlib import Path
+
+
+def load_env_file(path: Path | None = None) -> None:
+    """Minimal .env loader (stdlib only). Real environment variables always win."""
+    env_path = path or Path(__file__).resolve().parent.parent / ".env"
+    if not env_path.is_file():
+        return
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        key, value = key.strip(), value.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+load_env_file()
 
 REQUIRED_IN_PRODUCTION = (
     "database_url",

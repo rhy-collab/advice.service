@@ -6,13 +6,14 @@ import { AttorneyWorkbenchPage } from "./features/admin/AttorneyWorkbenchPage";
 import { LoginPage } from "./features/auth/LoginPage";
 import { LandingPage } from "./features/landing/LandingPage";
 import { PortalPage } from "./features/portal/PortalPage";
+import { ThreadsPage } from "./features/threads/ThreadsPage";
 import { initFrontendSentry } from "./lib/sentry";
 import "./styles.css";
 
 initFrontendSentry();
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined;
-type AppRoute = "admin" | "attorney" | "home" | "login" | "portal";
+type AppRoute = "admin" | "app" | "attorney" | "home" | "login" | "portal";
 
 function App() {
   const route = currentRoute();
@@ -23,6 +24,9 @@ function App() {
     }
     if (route === "login") {
       return <LoginPage demoMode />;
+    }
+    if (route === "app") {
+      return <ThreadsPage />;
     }
     return route === "portal" ? <PortalPage demoMode /> : <LandingPage />;
   }
@@ -45,12 +49,19 @@ function AuthenticatedApp({ route }: { route: AppRoute }) {
     return <LoginPage />;
   }
 
+  if (route === "app") {
+    return <ThreadsPage getAuthToken={getToken} />;
+  }
+
   return route === "portal" ? <PortalPage getAuthToken={getToken} /> : <LandingPage />;
 }
 
 function currentRoute(): AppRoute {
   if (window.location.pathname === "/portal") {
     return "portal";
+  }
+  if (window.location.pathname === "/app") {
+    return "app";
   }
   if (window.location.pathname === "/login") {
     return "login";
