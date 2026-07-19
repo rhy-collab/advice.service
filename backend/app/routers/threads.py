@@ -63,6 +63,45 @@ def post_message(
     return response
 
 
+@router.get("/threads-diagnostics/anthropic")
+def anthropic_diagnostics(auth: AuthContext = Depends(require_auth_context)) -> dict:
+    """Temporary: report whether the Anthropic API is reachable and why not. No secrets returned."""
+    import os
+    from urllib import error as urlerror
+
+    from app.services.ai_prep_service import AnthropicMessageClient
+
+    key = os.getenv("ANTHROPIC_API_KEY", "")
+    info: dict = {
+        "key_present": bool(key),
+        "key_shape": f"{key[:7]}…len{len(key)}" if key else None,
+        "model_env": os.getenv("ANTHROPIC_MODEL"),
+    }
+    if not key:
+        return info
+    try:
+        response = AnthropicMessageClient().create_message(
+            {
+                "model": os.getenv("ANTHROPIC_MODEL", "claude-sonnet-4-5"),
+                "max_tokens": 16,
+                "messages": [{"role": "user", "content": "Say ok"}],
+            }
+        )
+        info["ok"] = True
+        info["reply"] = "".join(p.get("text", "") for p in response.get("content", []))[:40]
+    except urlerror.HTTPError as exc:
+        info["ok"] = False
+        info["http_status"] = exc.code
+        try:
+            info["error_body"] = exc.read().decode("utf-8", "replace")[:300]
+        except Exception:
+            pass
+    except Exception as exc:
+        info["ok"] = False
+        info["error"] = str(exc)[:300]
+    return info
+
+
 @router.get("/threads/{thread_id}/adviser-quotes", response_model=AdviserQuotesResponse)
 def adviser_quotes(
     thread_id: str,
