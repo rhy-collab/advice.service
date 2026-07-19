@@ -12,6 +12,10 @@
     },
     "rewrites": [
         {
+            "source": "/",
+            "destination": "/landing.html"
+        },
+        {
             "source": "/api(/.*)?",
             "destination": {
                 "type": "service",
