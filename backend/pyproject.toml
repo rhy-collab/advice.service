@@ -13,6 +13,7 @@ dependencies = [
   "fastapi>=0.124.4",
   "google-cloud-storage>=3.7.0",
   "pyjwt[crypto]>=2.10.1",
+  "psycopg2-binary>=2.9.9",
   "pydantic>=2.12.5",
   "python-multipart>=0.0.20",
   "sqlalchemy>=2.0.45",

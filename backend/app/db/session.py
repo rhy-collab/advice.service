@@ -15,7 +15,11 @@ class Base(DeclarativeBase):
 
 
 def database_url() -> str:
-    return os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
+    url = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
+    # Neon/Heroku-style URLs use the deprecated postgres:// scheme; SQLAlchemy 2 needs postgresql://.
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url.removeprefix("postgres://")
+    return url
 
 
 def engine_kwargs(url: str) -> dict[str, object]:
