@@ -23,6 +23,7 @@ const DOMAIN_LABELS: Record<string, string> = {
 
 function speaker(role: string): { name: string; kind: string } {
   if (role.startsWith("advisor:")) return { name: role.slice(8), kind: "advisor" };
+  if (role.startsWith("chair:")) return { name: role.slice(6), kind: "chair" };
   switch (role) {
     case "founder":
       return { name: "You", kind: "founder" };
@@ -40,7 +41,6 @@ function speaker(role: string): { name: string; kind: string } {
 export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
   const [active, setActive] = useState<ThreadDetail | null>(null);
-  const [problemDraft, setProblemDraft] = useState(initialProblem());
   const [composerText, setComposerText] = useState("");
   const [composerMode, setComposerMode] = useState<"agent" | "adviser">("agent");
   const [quotes, setQuotes] = useState<AdviserQuotesResponse | null>(null);
@@ -80,17 +80,28 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
     }
   }
 
-  async function handleCreate() {
-    const text = problemDraft.trim();
-    if (!text) return;
-    const detail = await guarded(() => createThread(text, getAuthToken));
-    if (detail) {
-      setActive(detail);
-      setProblemDraft("");
-      setQuotes(null);
-      void refreshThreads();
+  const startThread = useCallback(
+    async (text: string) => {
+      const detail = await guarded(() => createThread(text, getAuthToken));
+      if (detail) {
+        setActive(detail);
+        setQuotes(null);
+        void refreshThreads();
+      }
+    },
+    [getAuthToken, refreshThreads],
+  );
+
+  // Landing handoff: ?problem=... auto-starts the thread — no extra click.
+  const autoStarted = useRef(false);
+  useEffect(() => {
+    const problem = new URLSearchParams(window.location.search).get("problem");
+    if (problem && !autoStarted.current) {
+      autoStarted.current = true;
+      window.history.replaceState({}, "", "/app");
+      void startThread(problem);
     }
-  }
+  }, [startThread]);
 
   async function handleOpen(threadId: string) {
     const detail = await guarded(() => getThread(threadId, getAuthToken));
@@ -102,7 +113,14 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
   }
 
   async function handleSend() {
-    if (!active || !composerText.trim()) return;
+    if (!composerText.trim()) return;
+    if (!active) {
+      // First message IS the problem — it convenes the board.
+      const text = composerText.trim();
+      setComposerText("");
+      await startThread(text);
+      return;
+    }
     if (composerMode === "adviser") {
       const response = await guarded(() => getAdviserQuotes(active.id, getAuthToken));
       if (response) setQuotes(response);
@@ -158,35 +176,33 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
         </div>
         {error && <div className="th-error">{error}</div>}
 
-        {!active ? (
-          <div className="th-intake">
-            <h1>What's the problem?</h1>
-            <p>Describe it once. Your board gathers context, defines the problem, and debates it with genuinely opposed views.</p>
-            <textarea
-              value={problemDraft}
-              onChange={(e) => setProblemDraft(e.target.value)}
-              placeholder="e.g. My cofounder wants 60% equity — is that reasonable at our stage?"
-              rows={4}
-            />
-            <button className="th-primary" disabled={busy || !problemDraft.trim()} onClick={() => void handleCreate()}>
-              {busy ? "Convening your board…" : "Convene the board"}
-            </button>
-          </div>
-        ) : (
-          <>
+        <>
             <div className="th-thread-scroll" ref={scrollRef}>
-              <div className="th-problem">
-                <span className="th-problem-label">Problem</span>
-                <p>{active.problem_text}</p>
-              </div>
+              {!active && (
+                <div className="th-msg th-msg-chair">
+                  <span className="th-msg-name">Eleanor Voss — Chair of the Board</span>
+                  <p>
+                    What's your biggest startup problem right now? Describe it once, right here.
+                    I'll gather context, define the problem, and convene a board of advisors with
+                    genuinely opposed views to debate it — free, all the way through.
+                  </p>
+                </div>
+              )}
 
-              {active.domain && (
+              {active && (
+                <div className="th-problem">
+                  <span className="th-problem-label">Problem</span>
+                  <p>{active.problem_text}</p>
+                </div>
+              )}
+
+              {active?.domain && (
                 <div className="th-round">
                   <span className="th-domain-chip">{DOMAIN_LABELS[active.domain] ?? active.domain}</span>
                 </div>
               )}
 
-              {active.messages.map((message, index) => {
+              {(active?.messages ?? []).map((message, index) => {
                 const who = speaker(message.role);
                 return (
                   <div key={index} className={`th-msg th-msg-${who.kind}`}>
@@ -196,7 +212,7 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
                 );
               })}
 
-              {busy && <div className="th-msg th-msg-board"><span className="th-msg-name">The Board</span><p className="th-typing">deliberating…</p></div>}
+              {busy && <div className="th-msg th-msg-board"><span className="th-msg-name">The board</span><p className="th-typing">deliberating…</p></div>}
 
               {quotes && (
                 <div className="th-quotes">
@@ -233,11 +249,13 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
                   }
                 }}
                 placeholder={
-                  composerMode === "agent"
-                    ? active.status === "agent_ready"
-                      ? "Ask your perfect agent about this problem…"
-                      : "Answer the board — users, MRR or stage, customer, team, goals…"
-                    : "Describe what you need — send to see your matched advisers…"
+                  !active
+                    ? "What's your biggest startup problem right now?"
+                    : composerMode === "agent"
+                      ? active.status === "agent_ready"
+                        ? "Ask your perfect agent about this problem…"
+                        : "Answer the board — users, MRR or stage, customer, team, goals…"
+                      : "Describe what you need — send to see your matched advisers…"
                 }
                 rows={2}
               />
@@ -253,7 +271,7 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
                     className={composerMode === "adviser" ? "active" : ""}
                     onClick={() => {
                       setComposerMode("adviser");
-                      if (active.status === "agent_ready") {
+                      if (active?.status === "agent_ready") {
                         void guarded(() => getAdviserQuotes(active.id, getAuthToken)).then((r) => r && setQuotes(r));
                       }
                     }}
@@ -265,7 +283,6 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
               </div>
             </div>
           </>
-        )}
       </main>
     </div>
   );
@@ -286,7 +303,3 @@ function statusLabel(status: string): string {
   }
 }
 
-function initialProblem(): string {
-  const params = new URLSearchParams(window.location.search);
-  return params.get("problem") ?? "";
-}

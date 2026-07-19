@@ -73,48 +73,50 @@ DOMAIN_LABELS: dict[str, str] = {
 # Four genuinely opposed lenses per domain (roadmap §1 step 6).
 DOMAIN_PANELS: dict[str, list[tuple[str, str]]] = {
     "pricing": [
-        ("Value Pricer", "Price against the economic value created for the customer, never against cost or competitors."),
-        ("PLG Advocate", "Price low or free to maximise adoption; monetise expansion, not entry."),
-        ("Unit-Economics Hawk", "No price is right if contribution margin is negative; model CAC payback before anything else."),
-        ("Enterprise Deal-Maker", "Fewer, bigger contracts; price high and negotiate — discounts buy commitment, not adoption."),
+        ("Maya Chen — Value Pricer", "Ex-Stripe monetisation lead. Price against the economic value created for the customer, never against cost or competitors."),
+        ("Danny Kovacs — PLG Advocate", "Growth operator from two product-led rockets. Price low or free to maximise adoption; monetise expansion, not entry."),
+        ("Ingrid Halvorsen — Unit-Economics Hawk", "Former CFO. No price is right if contribution margin is negative; model CAC payback before anything else."),
+        ("Ed Barrera — Enterprise Deal-Maker", "20 years of six-figure contracts. Fewer, bigger deals; price high and negotiate — discounts buy commitment, not adoption."),
     ],
     "fundraising": [
-        ("Bootstrapper", "Raising is a last resort; revenue is cheaper than equity and disciplines the product."),
-        ("Venture Maximalist", "In a winner-take-most market, under-raising is the biggest risk; speed beats dilution math."),
-        ("Angel-Round Pragmatist", "Small round from operators who open doors; keep optionality for the next 18 months."),
-        ("Revenue-First Operator", "Fund the raise with traction: close three more customers before any partner meeting."),
+        ("Ben Okoye — Bootstrapper", "Built to $10M ARR with no outside money. Raising is a last resort; revenue is cheaper than equity and disciplines the product."),
+        ("Vic Tanaka — Venture Maximalist", "Ex-VC partner. In a winner-take-most market, under-raising is the biggest risk; speed beats dilution math."),
+        ("Ana Petrov — Angel-Round Pragmatist", "Operator-angel with 40 checks written. Small round from operators who open doors; keep optionality for the next 18 months."),
+        ("Rory Feldman — Revenue-First Operator", "Three-time founder. Fund the raise with traction: close three more customers before any partner meeting."),
     ],
     "gtm": [
-        ("Product-Led Growth", "The product is the funnel; instrument activation and let usage sell."),
-        ("Sales-Led Enterprise", "High-ACV problems are sold, not signed up for; founder-led sales until repeatable."),
-        ("Community Builder", "Trust compounds; build the audience the product sells into before scaling spend."),
-        ("Paid-Acquisition Skeptic", "Paid channels flatter early metrics and hide weak retention; earn organic proof first."),
+        ("Poppy Lindqvist — PLG Strategist", "Scaled activation at two devtools startups. The product is the funnel; instrument activation and let usage sell."),
+        ("Sal Moreno — Enterprise Sales Lead", "Carried a bag for a decade. High-ACV problems are sold, not signed up for; founder-led sales until repeatable."),
+        ("Cass Wright — Community Builder", "Grew a 100k-member developer community. Trust compounds; build the audience the product sells into before scaling spend."),
+        ("Pete Aldana — Paid-Acquisition Skeptic", "Performance marketer turned apostate. Paid channels flatter early metrics and hide weak retention; earn organic proof first."),
     ],
     "pitch": [
-        ("Narrative Purist", "Investors buy a story about inevitability; the deck is theatre for one idea."),
-        ("Metrics-First Realist", "Traction slides raise rounds; strip adjectives, show the graph."),
-        ("Design Minimalist", "Ten slides, one point each; anything the eye can't parse in three seconds goes."),
-        ("Investor-Psychology Reader", "Pitch to the partner meeting you're not in; arm your champion with ammunition."),
+        ("Nadia Rahman — Narrative Purist", "Speechwriter turned pitch coach. Investors buy a story about inevitability; the deck is theatre for one idea."),
+        ("Mick Delaney — Metrics-First Realist", "Ex-growth VC. Traction slides raise rounds; strip adjectives, show the graph."),
+        ("Dee Chow — Design Minimalist", "Brand designer for 30+ seed decks. Ten slides, one point each; anything the eye can't parse in three seconds goes."),
+        ("Ivy Sorensen — Investor-Psychology Reader", "Former fund CoS. Pitch to the partner meeting you're not in; arm your champion with ammunition."),
     ],
     "legal": [
-        ("Risk-Averse Counsel", "Cap liability, protect IP, assume the relationship sours; paper for the divorce."),
-        ("Deal-Velocity Pragmatist", "The best contract is the one that closes this week; negotiate the two terms that matter."),
-        ("Founder-Protection Advocate", "Founders sign away leverage early; vesting, IP assignment and control terms first."),
-        ("Compliance Hawk", "Data, privacy and employment rules bite later; the cheap fix is now."),
+        ("Ruth Calloway — Risk-Averse Counsel", "25 years of startup wreckage seen. Cap liability, protect IP, assume the relationship sours; paper for the divorce."),
+        ("Dev Malik — Deal-Velocity Pragmatist", "Ex-BigLaw, allergic to overlawyering. The best contract is the one that closes this week; negotiate the two terms that matter."),
+        ("Fay Ibarra — Founder-Protection Advocate", "Represents founders only. Founders sign away leverage early; vesting, IP assignment and control terms first."),
+        ("Cole Whitfield — Compliance Hawk", "Privacy and employment specialist. Data, privacy and employment rules bite later; the cheap fix is now."),
     ],
     "ecosystem": [
-        ("SF Maximalist", "Talent density and capital proximity compound; be where the market is."),
-        ("Remote-First Advocate", "Burn rate is strategy; hire the best person anywhere and bank the difference."),
-        ("Capital-Efficiency Regionalist", "Second cities give runway and loyalty; arbitrage cost of living."),
-        ("Talent-Density Analyst", "Go where your specific talent pool is, not where startups in general are."),
+        ("Sofia Marsh — SF Maximalist", "Two exits, both built in SoMa. Talent density and capital proximity compound; be where the market is."),
+        ("Remy Okafor — Remote-First Advocate", "Built a 9-timezone team. Burn rate is strategy; hire the best person anywhere and bank the difference."),
+        ("Cara Bly — Capital-Efficiency Regionalist", "Runway mathematician. Second cities give runway and loyalty; arbitrage cost of living."),
+        ("Tal Vardi — Talent-Density Analyst", "Labour-market researcher. Go where your specific talent pool is, not where startups in general are."),
     ],
     "engineering": [
-        ("Ship-It Advocate", "Speed of iteration is the only moat pre-product-market-fit; duct tape is a feature."),
-        ("Scalability Hawk", "Rewrites kill startups; the shortcuts you take now are the outages you debug later."),
-        ("Buy-Don't-Build Pragmatist", "Every line of code is a liability; integrate before you author."),
-        ("Security & Compliance Lens", "One breach ends an early company; auth, secrets and data handling are not later problems."),
+        ("Shay Donnelly — Ship-It Advocate", "CTO of three pre-PMF startups. Speed of iteration is the only moat pre-product-market-fit; duct tape is a feature."),
+        ("Skye Ambrose — Scalability Hawk", "Lived through two rewrite deaths. Rewrites kill startups; the shortcuts you take now are the outages you debug later."),
+        ("Bo Lindgren — Buy-Don't-Build Pragmatist", "Integration-first architect. Every line of code is a liability; integrate before you author."),
+        ("Selin Acar — Security & Compliance Lens", "Security engineer for early B2B. One breach ends an early company; auth, secrets and data handling are not later problems."),
     ],
 }
+
+CHAIR_NAME = "Eleanor Voss — Chair of the Board"
 
 DOMAIN_KEYWORDS: dict[str, list[str]] = {
     "pricing": ["pricing", "price", "charge", "subscription", "monetis", "monetiz", "plan tier"],
@@ -375,7 +377,7 @@ class BoardService:
             _post(
                 db,
                 thread,
-                "board",
+                f"chair:{CHAIR_NAME}",
                 "Round 1 — Context. We already hold your business-context profile ("
                 + self._context_line(profile)
                 + "), so the board is satisfied it understands your startup. Moving straight to triage.",
@@ -390,7 +392,7 @@ class BoardService:
             _post(
                 db,
                 thread,
-                "board",
+                f"chair:{CHAIR_NAME}",
                 "Round 1 — Context. Before we debate anything, we need to actually understand your "
                 "startup — answering on a thin profile would be guesswork dressed as analysis. "
                 "Tell us, right here in the chat: " + "; ".join(missing) + ". "
@@ -458,7 +460,7 @@ class BoardService:
         _post(
             db,
             thread,
-            "board",
+            f"chair:{CHAIR_NAME}",
             "Round 2 — Problem definition & triage. "
             + self._round2_reasoning(thread.problem_text, domain)
             + f" Routed to: {DOMAIN_LABELS[domain]}. If that framing misses what you're actually "
@@ -501,7 +503,7 @@ class BoardService:
         _post(
             db,
             thread,
-            "board",
+            f"chair:{CHAIR_NAME}",
             f"Round 3 — Domain board. Convening your {DOMAIN_LABELS[domain]} panel: "
             + ", ".join(name for name, _ in panel)
             + ". Each drafts an independent position first — none of them sees the others' work "
@@ -521,7 +523,7 @@ class BoardService:
             _post(db, thread, f"advisor:{name}", position)
         db.flush()
 
-        _post(db, thread, "board", "Positions are in. One round of cross-examination — attack the weakest rival, concede what's stronger.")
+        _post(db, thread, f"chair:{CHAIR_NAME}", "Positions are in. One round of cross-examination — attack the weakest rival, concede what's stronger.")
 
         # One round of cross-examination — now (and only now) each sees the others.
         for i, row in enumerate(rows):
@@ -549,7 +551,7 @@ class BoardService:
         _post(
             db,
             thread,
-            "chair",
+            f"chair:{CHAIR_NAME}",
             chair["ruling"]
             + "\n\nAssumptions this stands on: "
             + " ".join(f"({i + 1}) {a}" for i, a in enumerate(chair["assumptions"]))
@@ -659,20 +661,48 @@ class BoardService:
 
     # ----------------------------------------------------------------- claude
 
+    _resolved_model: str | None = None
+
     def _claude(self, system: str, user: str, max_tokens: int = 700) -> str | None:
-        try:
-            response = self._anthropic_client.create_message(
-                {
-                    "model": os.getenv("ANTHROPIC_MODEL", "claude-sonnet-5"),
-                    "max_tokens": max_tokens,
-                    "system": system,
-                    "messages": [{"role": "user", "content": user}],
-                }
-            )
-            parts = response.get("content", [])
-            return "".join(p.get("text", "") for p in parts if p.get("type") == "text").strip() or None
-        except Exception:
-            return None
+        env_model = os.getenv("ANTHROPIC_MODEL", "").strip()
+        candidates = [m for m in (
+            self._resolved_model,
+            env_model or None,
+            "claude-sonnet-4-5",
+            "claude-sonnet-4-20250514",
+            "claude-3-7-sonnet-latest",
+            "claude-3-5-sonnet-latest",
+        ) if m]
+        seen: set[str] = set()
+        for model in candidates:
+            if model in seen:
+                continue
+            seen.add(model)
+            try:
+                response = self._anthropic_client.create_message(
+                    {
+                        "model": model,
+                        "max_tokens": max_tokens,
+                        "system": system,
+                        "messages": [{"role": "user", "content": user}],
+                    }
+                )
+                text = "".join(
+                    p.get("text", "") for p in response.get("content", []) if p.get("type") == "text"
+                ).strip()
+                if text:
+                    self._resolved_model = model
+                    return text
+            except Exception as exc:  # log to stdout so serverless logs show the real failure
+                detail = ""
+                body = getattr(exc, "read", None)
+                if callable(body):
+                    try:
+                        detail = body().decode("utf-8", "replace")[:300]
+                    except Exception:
+                        detail = ""
+                print(f"[board_service] anthropic call failed model={model}: {exc} {detail}", flush=True)
+        return None
 
     def _claude_route(self, problem_text: str, profile: FounderContextProfileModel) -> str | None:
         out = self._claude(
