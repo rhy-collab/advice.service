@@ -298,12 +298,14 @@ class BoardService:
             "customer_profile",
             "team_size",
             "goals",
+            "adviser_budget_per_hour",
         )
         if os.getenv("ANTHROPIC_API_KEY"):
             out = self._claude(
                 "Extract founder business context from the message. Reply ONLY with JSON using any of "
                 "these keys (omit keys the message says nothing about): users_customers, "
-                "revenue_or_funding_stage, customer_profile, team_size, goals. Values are short strings "
+                "revenue_or_funding_stage, customer_profile, team_size, goals, adviser_budget_per_hour. "
+                "adviser_budget_per_hour is what they would pay per hour for a human expert. Values are short strings "
                 "quoting the founder's own facts.",
                 message,
                 max_tokens=300,
@@ -364,9 +366,14 @@ class BoardService:
                         not_to_exceed=total,
                     )
                 )
-            # Filter to the budget band where possible, rank by fit (closest under budget first).
-            in_band = [q for q in quotes if q.estimated_total <= budget * 2]
-            ranked = sorted(in_band or quotes, key=lambda q: abs(q.estimated_total - budget))
+            # Rank by fit: founder's stated hourly budget first, tier budget band second.
+            profile = self._get_or_create_profile(db, thread.organisation_id)
+            hourly_budget = self._budget_number(profile)
+            if hourly_budget:
+                ranked = sorted(quotes, key=lambda q: abs(q.hourly_rate - hourly_budget))
+            else:
+                in_band = [q for q in quotes if q.estimated_total <= budget * 2]
+                ranked = sorted(in_band or quotes, key=lambda q: abs(q.estimated_total - budget))
             return AdviserQuotesResponse(domain=thread.domain, quotes=ranked[:3])
 
     def list_advisers(self) -> "AdviserDirectoryResponse":
@@ -830,13 +837,22 @@ class BoardService:
         San Francisco adviser pool described in the roadmap (§3 item 6).
         """
         ruling = verdict.ruling if verdict else "(no verdict yet)"
+        budget = self._budget_number(profile)
+        budget_line = (
+            f"The founder said they would budget about ${budget}/hour for a human expert. "
+            f"Centre the advisers' hourly rates on that: most at or below ${budget}/hr, one or two "
+            "slightly above as clearly-flagged stretch options, and reference their budget fit in "
+            "why_fit where natural. "
+            if budget
+            else "Vary seniority and hourly rates ($150–$500). "
+        )
         out = self._claude(
             "You generate a marketplace shortlist of expert advisers for a founder-advisory product. "
             "Create exactly 10 fictional but deeply credible individual advisers perfectly matched to "
             "the founder's specific problem, context, and their board's verdict. They must read as "
             "genuinely impressive domain experts (named operators, ex-companies, concrete track "
-            "records) — no titled roles like 'Legal Lead', just real-sounding people. Vary seniority "
-            "and hourly rates ($150–$500). Reply ONLY with a JSON array of 10 objects with keys: "
+            "records) — no titled roles like 'Legal Lead', just real-sounding people. " + budget_line +
+            "Reply ONLY with a JSON array of 10 objects with keys: "
             "name, title (their real-world credential line, e.g. 'ex-Stripe pricing lead'), "
             "hourly_rate (integer), why_fit (ONE sentence, second person, referencing the founder's "
             "actual problem and numbers — why this specific person is the right match). No markdown.",
@@ -890,6 +906,14 @@ class BoardService:
     # ----------------------------------------------------------------- helpers
 
     @staticmethod
+    def _budget_number(profile: FounderContextProfileModel) -> int | None:
+        import re
+
+        raw = profile.adviser_budget_per_hour or ""
+        numbers = [int(n) for n in re.findall(r"\d+", raw.replace(",", ""))]
+        return numbers[0] if numbers else None
+
+    @staticmethod
     def _price_tier(problem_text: str) -> str:
         """Reactive-vs-originative x bounded-vs-open-ended (roadmap §6)."""
         text = problem_text.lower()
@@ -913,6 +937,7 @@ class BoardService:
             f"customer: {profile.customer_profile or 'unknown'}",
             f"team: {profile.team_size or 'unknown'}",
             f"goals: {profile.goals or 'unknown'}",
+            f"hourly budget for a human expert: {profile.adviser_budget_per_hour or 'unknown'}",
         ]
         return "; ".join(parts)
 
@@ -924,6 +949,7 @@ class BoardService:
             customer_profile=profile.customer_profile,
             team_size=profile.team_size,
             goals=profile.goals,
+            adviser_budget_per_hour=profile.adviser_budget_per_hour,
         )
 
     def _get_or_create_profile(self, db: Session, organisation_id: str) -> FounderContextProfileModel:

@@ -21,6 +21,7 @@ FULL_CONTEXT = UpdateContextRequest(
     customer_profile="Seed-stage B2B founders",
     team_size="3 (2 eng, 1 founder)",
     goals="Reach $25k MRR in 6 months",
+    adviser_budget_per_hour="around $300/hr",
 )
 
 
@@ -41,7 +42,7 @@ def test_thin_profile_stops_at_round1_with_follow_ups(service: BoardService) -> 
     assert detail.context_sufficient is False
     round1 = next(b for b in detail.boards if b.round == 1)
     assert round1.verdict is not None
-    assert len(round1.verdict.follow_up_questions) == 5
+    assert len(round1.verdict.follow_up_questions) == 6
     # Rounds 2-3 must NOT run on a thin profile (roadmap §1 step 4).
     assert all(b.round == 1 for b in detail.boards)
 

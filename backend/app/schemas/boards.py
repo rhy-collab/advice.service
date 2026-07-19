@@ -7,6 +7,7 @@ class ContextProfile(BaseModel):
     customer_profile: str | None = None
     team_size: str | None = None
     goals: str | None = None
+    adviser_budget_per_hour: str | None = None
 
     def missing_fields(self) -> list[str]:
         labels = {
@@ -15,6 +16,7 @@ class ContextProfile(BaseModel):
             "customer_profile": "who exactly the customer is",
             "team_size": "your team size",
             "goals": "what success looks like",
+            "adviser_budget_per_hour": "roughly what you'd budget per hour if you ever brought in a human expert",
         }
         return [labels[k] for k, v in self.model_dump().items() if not (v and v.strip())]
 
@@ -84,6 +86,7 @@ class UpdateContextRequest(BaseModel):
     customer_profile: str | None = None
     team_size: str | None = None
     goals: str | None = None
+    adviser_budget_per_hour: str | None = None
 
 
 class PostMessageRequest(BaseModel):

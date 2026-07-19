@@ -31,6 +31,7 @@ class FounderContextProfileModel(Base):
     customer_profile: Mapped[str | None] = mapped_column(Text, nullable=True)
     team_size: Mapped[str | None] = mapped_column(Text, nullable=True)
     goals: Mapped[str | None] = mapped_column(Text, nullable=True)
+    adviser_budget_per_hour: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

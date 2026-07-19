@@ -237,7 +237,7 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
                     ? "What's your biggest startup problem right now?"
                     : active.status === "agent_ready"
                       ? "Ask your agent about this problem…"
-                      : "Answer the board — users, MRR or stage, customer, team, goals…"
+                      : "Answer the board — users, MRR or stage, customer, team, goals, hourly budget for an expert…"
                 }
                 rows={2}
               />
