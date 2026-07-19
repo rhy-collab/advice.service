@@ -56,7 +56,30 @@ from app.schemas.boards import (
     UpdateContextRequest,
     Verdict,
 )
+from urllib import request as _urllib_request
+import json as _json
+
 from app.services.ai_prep_service import AnthropicMessageClient
+
+
+class BoardAnthropicClient(AnthropicMessageClient):
+    """Same wire format, longer timeout — board calls digest whole debates."""
+
+    def create_message(self, payload: dict) -> dict:
+        api_key = os.environ["ANTHROPIC_API_KEY"]
+        base_url = os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com")
+        req = _urllib_request.Request(
+            f"{base_url.rstrip('/')}/v1/messages",
+            data=_json.dumps(payload).encode("utf-8"),
+            headers={
+                "content-type": "application/json",
+                "x-api-key": api_key,
+                "anthropic-version": os.getenv("ANTHROPIC_VERSION", "2023-06-01"),
+            },
+            method="POST",
+        )
+        with _urllib_request.urlopen(req, timeout=120) as response:
+            return _json.loads(response.read().decode("utf-8"))
 
 PLATFORM_FEE_PCT = 10
 
@@ -153,7 +176,7 @@ class BoardService:
         anthropic_client: AnthropicMessageClient | None = None,
     ) -> None:
         self._session_factory = session_factory
-        self._anthropic_client = anthropic_client or AnthropicMessageClient()
+        self._anthropic_client = anthropic_client or BoardAnthropicClient()
 
     # ------------------------------------------------------------------ threads
 
@@ -721,7 +744,8 @@ class BoardService:
             f"You are '{name}', one advisor on a four-person board with genuinely opposed priors. "
             f"Your fixed lens: {persona} Draft your independent position (150 words max) on the founder's "
             "problem. You have NOT seen any other advisor's position. Be concrete and evidence-minded; "
-            "stake a real claim your lens demands, even if other lenses would disagree.",
+            "stake a real claim your lens demands, even if other lenses would disagree. "
+            "Write plain conversational prose — no markdown, no headings, no bullet lists.",
             f"Problem: {thread.problem_text}\nFounder context: {self._context_line(profile)}",
         )
         return out or f"[{name}] position unavailable — model call failed; deterministic fallback applies."
@@ -731,7 +755,7 @@ class BoardService:
         out = self._claude(
             f"You are '{name}'. This is the single cross-examination round. In 80 words max: attack the "
             "weakest rival position, concede anything genuinely stronger than your own, and state whether "
-            "you hold or amend your position.",
+            "you hold or amend your position. Plain conversational prose — no markdown formatting.",
             f"Your position: {position}\nRivals:\n{rivals}",
             max_tokens=300,
         )
@@ -773,6 +797,7 @@ class BoardService:
         return self._claude(
             "You are the 'perfect agent' — a single advisor synthesized from a four-person opposed-priors "
             "panel. Answer the founder's question grounded in the panel's verdict and preserved dissent. "
+            "Plain conversational prose — no markdown. "
             "Never mention prices, paywalls, or usage limits: this chat is free and unlimited. If they ask "
             "for a human, point them to the Adviser tab. 180 words max.",
             f"Problem: {thread.problem_text}\nVerdict: {verdict_text}\nDissent: {dissent}\n"
