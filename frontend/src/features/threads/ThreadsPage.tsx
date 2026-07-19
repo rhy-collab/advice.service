@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  AdviserProfile,
   AdviserQuotesResponse,
   GetAuthToken,
   ThreadDetail,
   ThreadSummary,
   createThread,
-  getAdviserDirectory,
   getAdviserQuotes,
   getThread,
   listThreads,
@@ -46,7 +44,6 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
   const [composerText, setComposerText] = useState("");
   const [composerMode, setComposerMode] = useState<"agent" | "adviser">("agent");
   const [quotes, setQuotes] = useState<AdviserQuotesResponse | null>(null);
-  const [directory, setDirectory] = useState<AdviserProfile[] | null>(null);
   const [matching, setMatching] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -118,9 +115,7 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
 
   function openAdviserScreen() {
     setComposerMode("adviser");
-    if (!directory) {
-      void getAdviserDirectory(getAuthToken).then((r) => setDirectory(r.advisers)).catch(() => {});
-    }
+    // Advisers unlock only at Stage 4 — matched to the ruled problem (invariant 7).
     if (active?.status === "agent_ready" && !quotes) {
       setMatching(true);
       getAdviserQuotes(active.id, getAuthToken)
@@ -263,15 +258,30 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
             <div className="th-marketplace">
               <header className="th-marketplace-head">
                 <div>
-                  <h1>Adviser marketplace</h1>
-                  <p>Real experts, self-set rates, one flat 10% platform fee. Book only when you're ready — everything else stays free.</p>
+                  <h1>Your matched advisers</h1>
+                  <p>Real experts matched to this exact problem, self-set rates, one flat 10% platform fee. Book only when you're ready — everything else stays free.</p>
                 </div>
                 <button className="th-primary" onClick={() => setComposerMode("agent")}>← Back to your board</button>
               </header>
 
-              {matching && <p className="th-typing">Matching advisers to your thread from its full context…</p>}
+              {(!active || active.status !== "agent_ready") && (
+                <section className="th-gate">
+                  <h2>We need a little more information together first.</h2>
+                  <p>
+                    Advisers are matched to your specific problem once your board has ruled — that means finishing
+                    the conversation: describe your problem, answer the context questions, and let the panel debate
+                    it. When the Chair delivers the verdict, this tab unlocks with advisers hand-matched to exactly
+                    what you're facing.
+                  </p>
+                  <button className="th-primary" onClick={() => setComposerMode("agent")}>Continue the conversation</button>
+                </section>
+              )}
 
-              {quotes && quotes.quotes.length > 0 && (
+              {active?.status === "agent_ready" && matching && (
+                <p className="th-typing">Matching advisers to your problem from its full context — a few seconds…</p>
+              )}
+
+              {active?.status === "agent_ready" && quotes && quotes.quotes.length > 0 && (
                 <section className="th-quotes">
                   <h2>Matched to your thread — {DOMAIN_LABELS[quotes.domain] ?? quotes.domain}</h2>
                   <p className="th-quotes-note">
@@ -291,30 +301,6 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
                       </div>
                     </article>
                   ))}
-                </section>
-              )}
-
-              {directory && (
-                <section>
-                  <h2 className="th-directory-title">Browse every service</h2>
-                  {Object.entries(DOMAIN_LABELS).map(([domain, label]) => {
-                    const group = directory.filter((a) => a.domain === domain);
-                    if (group.length === 0) return null;
-                    return (
-                      <div key={domain} className="th-directory-group">
-                        <h3>{label}</h3>
-                        <div className="th-directory-grid">
-                          {group.map((adviser) => (
-                            <article key={adviser.adviser_id} className="th-directory-card">
-                              <h4>{adviser.name}</h4>
-                              <p className="th-quote-meta">{adviser.metro} · ${adviser.hourly_rate}/hr</p>
-                              <p>{adviser.skills_profile}</p>
-                            </article>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
                 </section>
               )}
             </div>
