@@ -27,7 +27,7 @@ function speaker(role: string): { name: string; kind: string } {
   if (role.startsWith("advisor:")) return { name: role.slice(8), kind: "advisor" };
   if (role.startsWith("chair:")) return { name: role.slice(6), kind: "chair" };
   if (role.startsWith("consultant:")) return { name: role.slice(11), kind: "consultant" };
-  if (role === "charter") return { name: "Charter Consultancy", kind: "charter" };
+  if (role === "charter") return { name: "Wendy Ashworth — Charter Consultancy", kind: "charter" };
   switch (role) {
     case "founder":
       return { name: "You", kind: "founder" };
@@ -267,7 +267,7 @@ export function ThreadsPage({ getAuthToken }: { getAuthToken?: GetAuthToken }) {
                 <div className="th-tabs">
                   <button className={composerMode === "agent" ? "active" : ""} onClick={() => setComposerMode("agent")}>🤖 Agent</button>
                   <button onClick={() => void handleCharter()}>
-                    🏛 Charter Consultancy <span className="th-paid-dot" />
+                    🏛 Charter Consultant <span className="th-paid-dot" />
                   </button>
                   <button className={composerMode === "adviser" ? "active" : ""} onClick={openAdviserScreen}>
                     ➕ Add consultant <span className="th-paid-dot" />

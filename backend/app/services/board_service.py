@@ -365,26 +365,42 @@ class BoardService:
                     db,
                     thread,
                     "charter",
-                    "Hi, welcome to Charter Consultancy. We can help directly — but first your board "
-                    "needs to finish understanding the problem. Keep the conversation going with the "
-                    "Agent; once the Chair has ruled, come back and we'll book you in with our triage team.",
+                    "Hi, my name is Wendy Ashworth and I'm from Charter Consultancy. We'd love to help "
+                    "directly — but first your board needs to finish understanding the problem. Keep "
+                    "going with the Agent; once the Chair has ruled, come back and I'll book you in "
+                    "with our triage team.",
                 )
             else:
                 verdict = self._round3_verdict(db, thread)
                 cost = verdict.estimated_cost if verdict and verdict.estimated_cost else 500
-                _post(
-                    db,
-                    thread,
-                    "charter",
-                    "Hi, welcome to Charter Consultancy. I can see your problem and everything your "
-                    "board has already worked through. The next step is a phone call with our triage "
-                    "team — they'll get a deeper understanding of what you're facing and confirm "
-                    "whether our internal team can solve it for you. Book a call and we'll come "
-                    "prepared with your full thread.\n\n"
-                    f"Please note our approximate budget for a matter like yours is ${cost}. "
-                    "Our engagements are flat-fee — $250 simple / $500 standard / $1,000 negotiation / "
-                    "$2,000 drafting — agreed before any work starts, so there are no surprise invoices.",
-                )
+                message = None
+                if os.getenv("ANTHROPIC_API_KEY"):
+                    message = self._claude(
+                        "You are Wendy Ashworth, the warm and sharp client lead at Charter Consultancy. "
+                        "A founder has just clicked 'Charter Consultant' after their advisory board ruled. "
+                        "Write your greeting (110 words max, plain prose, no markdown). It MUST: open with "
+                        "'Hi, my name is Wendy Ashworth and I'm from Charter Consultancy.'; show you've read "
+                        "their full problem by naming it specifically; say you understand it and you'd love "
+                        "for your team to have a go at solving it; invite them to book a phone call with the "
+                        "triage team to confirm the internal team can take it on; and close by noting the "
+                        f"approximate budget for a matter like theirs is ${cost}, with flat-fee engagements "
+                        "at $250 simple / $500 standard / $1,000 negotiation / $2,000 drafting — agreed "
+                        "before any work starts.",
+                        f"Problem: {thread.problem_text}\n"
+                        f"Board verdict: {(verdict.ruling if verdict else '')[:400]}",
+                        max_tokens=350,
+                    )
+                if not message:
+                    message = (
+                        "Hi, my name is Wendy Ashworth and I'm from Charter Consultancy. I've got your "
+                        "full problem — I understand it, and I'd love for our team to have a go at "
+                        "solving it. The next step is a phone call with our triage team, who'll confirm "
+                        "our internal team can take it on. "
+                        f"Please note our approximate budget for a matter like yours is ${cost}; "
+                        "engagements are flat-fee — $250 simple / $500 standard / $1,000 negotiation / "
+                        "$2,000 drafting — agreed before any work starts."
+                    )
+                _post(db, thread, "charter", message)
             db.commit()
             return self._thread_detail(db, thread_id, organisation_id)
 
